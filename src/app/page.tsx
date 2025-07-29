@@ -149,6 +149,7 @@ export default function Home() {
                         </CardHeader>
                         <CardFooter className="p-3 pt-0">
                           <p className="text-xs text-muted-foreground truncate">{recipe.publisher}</p>
+
                         </CardFooter>
                       </Link>
                     </Card>
