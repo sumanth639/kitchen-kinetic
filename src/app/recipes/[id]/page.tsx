@@ -50,8 +50,8 @@ export default async function RecipeDetailsPage({ params }: { params: { id: stri
             <Image
               src={recipe.image_url}
               alt={recipe.title}
-              layout="fill"
-              objectFit="cover"
+              fill
+              style={{objectFit:"cover"}}
               className="w-full h-full"
               data-ai-hint="recipe food"
             />

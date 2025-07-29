@@ -118,8 +118,8 @@ export default function Home() {
                             <Image
                                src={recipe.image_url}
                                alt={recipe.title}
-                               layout="fill"
-                               objectFit="cover"
+                               fill
+                               style={{objectFit:"cover"}}
                                className="rounded-t-lg"
                                data-ai-hint="recipe food"
                             />
