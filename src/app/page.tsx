@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
@@ -15,6 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Loader2, Search, Soup, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useRouter, useSearchParams } from 'next/navigation';
+
 
 const API_KEY = 'a7145071-f45e-416f-a7d8-98ad828feeef';
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
@@ -31,16 +33,16 @@ function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <Card className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg aspect-square">
+    <Card className="bg-card text-card-foreground shadow-sm overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg aspect-square">
       <Link href={`/recipes/${recipe.id}`} className="contents">
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-2/3">
           <Image
             src={recipe.image_url}
             alt={recipe.title}
             fill
             style={{ objectFit: 'cover' }}
             className={cn(
-              'transition-all duration-300 group-hover:scale-105',
+              'transition-transform duration-300 group-hover:scale-105',
               isLoading ? 'opacity-0' : 'opacity-100'
             )}
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
@@ -48,14 +50,14 @@ function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
             data-ai-hint="recipe food"
           />
           {isLoading && <Skeleton className="absolute inset-0" />}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-            <CardTitle className="text-sm font-semibold leading-snug text-white">
-              {recipe.title}
-            </CardTitle>
-            <p className="text-xs text-white/80 truncate pt-1">
-              {recipe.publisher}
-            </p>
-          </div>
+        </div>
+        <div className="p-3 flex flex-col justify-center flex-grow">
+          <CardTitle className="text-sm font-semibold leading-snug">
+            {recipe.title}
+          </CardTitle>
+          <p className="text-xs text-muted-foreground truncate pt-1">
+            {recipe.publisher}
+          </p>
         </div>
       </Link>
     </Card>
@@ -63,28 +65,36 @@ function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
 }
 
 export default function Home() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  
+  const page = searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : 1;
+  const searchTerm = searchParams.get('q') || '';
+  
+  const [currentPage, setCurrentPage] = useState(page);
 
   const form = useForm<SearchFormValues>({
     resolver: zodResolver(searchFormSchema),
     defaultValues: {
-      searchTerm: '',
+      searchTerm: searchTerm,
     },
   });
+  
+  const fetchRecipes = useCallback(async (query: string) => {
+    if (!query) return;
 
-  async function onSubmit(values: SearchFormValues) {
     setLoading(true);
     setError(null);
     setSearched(true);
     setRecipes([]);
-    setCurrentPage(1);
 
     try {
-      const response = await fetch(`${API_URL}?search=${values.searchTerm}&key=${API_KEY}`);
+      const response = await fetch(`${API_URL}?search=${query}&key=${API_KEY}`);
       if (!response.ok) {
         throw new Error('Something went wrong. Please try again.');
       }
@@ -100,6 +110,27 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  }, []);
+  
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query) {
+      form.setValue('searchTerm', query);
+      fetchRecipes(query);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, fetchRecipes]);
+  
+  useEffect(() => {
+     setCurrentPage(page);
+  }, [page]);
+
+
+  async function onSubmit(values: SearchFormValues) {
+     const params = new URLSearchParams();
+     params.set('q', values.searchTerm);
+     params.set('page', '1');
+     router.push(`/?${params.toString()}`);
   }
   
   const totalPages = Math.ceil(recipes.length / RECIPES_PER_PAGE);
@@ -107,13 +138,24 @@ export default function Home() {
     (currentPage - 1) * RECIPES_PER_PAGE,
     currentPage * RECIPES_PER_PAGE
   );
+  
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    const params = new URLSearchParams(searchParams);
+    params.set('page', newPage.toString());
+    router.push(`/?${params.toString()}`);
+  };
 
   const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+    if (currentPage < totalPages) {
+       handlePageChange(currentPage + 1);
+    }
   };
 
   const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
+    if (currentPage > 1) {
+      handlePageChange(currentPage - 1);
+    }
   };
 
 
@@ -161,7 +203,11 @@ export default function Home() {
            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
              {Array.from({ length: RECIPES_PER_PAGE }).map((_, index) => (
                 <Card key={index} className="overflow-hidden group flex flex-col border rounded-lg aspect-square">
-                    <Skeleton className="w-full h-full" />
+                    <Skeleton className="w-full h-2/3" />
+                    <div className="p-3 flex flex-col justify-center flex-grow">
+                      <Skeleton className="h-4 w-3/4 mb-2" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
                 </Card>
               ))}
            </div>

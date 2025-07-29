@@ -33,14 +33,14 @@ function RecipeImage({ src, alt }: { src: string; alt: string }) {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="relative w-full aspect-square md:aspect-auto">
+    <div className="relative w-full h-full">
       <Image
         src={src}
         alt={alt}
         fill
         style={{ objectFit: 'cover' }}
         className={cn(
-          'w-full h-full transition-opacity duration-300 rounded-t-lg md:rounded-l-lg md:rounded-t-none',
+          'transition-opacity duration-300 rounded-t-lg md:rounded-l-lg md:rounded-t-none',
           isLoading ? 'opacity-0' : 'opacity-100'
         )}
         onLoad={() => setIsLoading(false)}
@@ -82,7 +82,9 @@ export default function RecipeDetailsPage() {
 
   useEffect(() => {
     if (!recipe || !originalIngredients.length) return;
-    if (servings === recipe.servings) return;
+    
+    // Only update ingredients if servings have changed from the original
+    if (servings === recipe.servings && recipe.ingredients.length === originalIngredients.length) return;
 
     const newIngredients = originalIngredients.map(ing => {
       if (ing.quantity === null) {
@@ -113,7 +115,9 @@ export default function RecipeDetailsPage() {
       <div className="container mx-auto px-4 py-8">
         <Card className="overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-2">
-            <Skeleton className="w-full aspect-[4/3] md:aspect-auto" />
+            <div className="aspect-square md:aspect-auto">
+              <Skeleton className="w-full h-full" />
+            </div>
             <div className="p-6">
               <Skeleton className="h-8 w-3/4 mb-2" />
               <Skeleton className="h-6 w-1/2 mb-6" />
@@ -148,7 +152,7 @@ export default function RecipeDetailsPage() {
     <div className="container mx-auto px-4 py-8">
       <Card className="overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-2">
-          <div className="relative">
+          <div className="relative aspect-square">
             <RecipeImage src={recipe.image_url} alt={recipe.title} />
           </div>
           <div className="flex flex-col p-6">
