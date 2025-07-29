@@ -17,7 +17,7 @@ import { doc, getDoc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 
-const API_KEY = 'a7145071-f45e-416f-a7d8-98ad828feeef';
+const API_KEY = process.env.NEXT_PUBLIC_FORKIFY_API_KEY;
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
 
 async function getRecipe(id: string): Promise<Recipe | null> {
