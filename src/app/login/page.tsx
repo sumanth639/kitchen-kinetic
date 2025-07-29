@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Chrome, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -28,13 +29,25 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/');
+    }
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
+        setGoogleLoading(true);
         const result = await getRedirectResult(auth);
         if (result) {
-          // User signed in.
+          // User signed in. The useAuth hook will handle the redirect.
+          toast({
+            title: 'Signed in successfully',
+            description: `Welcome back, ${result.user.email}!`,
+          });
           router.push('/');
         }
       } catch (error: any) {
@@ -43,6 +56,8 @@ export default function LoginPage() {
           description: error.message,
           variant: 'destructive',
         });
+      } finally {
+        setGoogleLoading(false);
       }
     };
     handleRedirectResult();
@@ -77,8 +92,6 @@ export default function LoginPage() {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    // It's better to handle potential errors here with a catch, 
-    // but the primary error handling will be in the useEffect after redirect.
     await signInWithRedirect(auth, provider).catch((error) => {
        toast({
           title: 'Google Sign-In Error',
@@ -88,6 +101,14 @@ export default function LoginPage() {
         setGoogleLoading(false);
     });
   };
+
+  if (authLoading || user) {
+     return (
+       <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+     )
+  }
 
   return (
     <div className="container flex min-h-[calc(100vh-8rem)] items-center justify-center py-12">

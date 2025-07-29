@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Chrome, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 const signupFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -28,20 +29,34 @@ export default function SignupPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const { user, loading: authLoading } = useAuth();
   
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/');
+    }
+  }, [user, authLoading, router]);
+
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
+        setGoogleLoading(true);
         const result = await getRedirectResult(auth);
         if (result) {
+          toast({
+            title: 'Account created successfully',
+            description: `Welcome, ${result.user.email}!`,
+          });
           router.push('/');
         }
       } catch (error: any) {
         toast({
-          title: 'Google Sign-In Error',
+          title: 'Google Sign-Up Error',
           description: error.message,
           variant: 'destructive',
         });
+      } finally {
+        setGoogleLoading(false);
       }
     };
     handleRedirectResult();
@@ -78,13 +93,21 @@ export default function SignupPage() {
     provider.setCustomParameters({ prompt: 'select_account' });
     await signInWithRedirect(auth, provider).catch((error) => {
        toast({
-          title: 'Google Sign-In Error',
+          title: 'Google Sign-Up Error',
           description: error.message,
           variant: 'destructive',
         });
         setGoogleLoading(false);
     });
   };
+
+  if (authLoading || user) {
+     return (
+       <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+     )
+  }
 
   return (
     <div className="container flex min-h-[calc(100vh-8rem)] items-center justify-center py-12">
