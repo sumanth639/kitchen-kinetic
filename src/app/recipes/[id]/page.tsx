@@ -1,11 +1,16 @@
+
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { type Recipe } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Users, ChefHat, ExternalLink, CheckCircle2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 const API_KEY = 'a7145071-f45e-416f-a7d8-98ad828feeef';
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
@@ -24,38 +29,95 @@ async function getRecipe(id: string): Promise<Recipe | null> {
   }
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  const recipe = await getRecipe(params.id);
-  if (!recipe) {
-    return { title: 'Recipe not found' };
-  }
-  return {
-    title: `${recipe.title} | Kitchen Kinetic`,
-    description: `Get the full recipe for ${recipe.title}, published by ${recipe.publisher}.`,
-  };
+// This needs to be a separate client component to use hooks
+function RecipeImage({ src, alt }: { src: string; alt: string }) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  return (
+    <div className="md:col-span-2 relative aspect-video md:aspect-auto">
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        style={{ objectFit: 'cover' }}
+        className={cn(
+          'w-full h-full transition-opacity duration-300',
+          isLoading ? 'opacity-0' : 'opacity-100'
+        )}
+        onLoad={() => setIsLoading(false)}
+        data-ai-hint="recipe food"
+      />
+      {isLoading && <Skeleton className="absolute inset-0" />}
+    </div>
+  );
 }
 
-export default async function RecipeDetailsPage({ params }: { params: { id: string } }) {
-  const recipe = await getRecipe(params.id);
+// Due to using a client component inside, the page itself can't be fully static at build time
+// in the same way. We keep the data fetching here.
+export default function RecipeDetailsPage({ params }: { params: { id: string } }) {
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useState(() => {
+    async function loadRecipe() {
+      setLoading(true);
+      const fetchedRecipe = await getRecipe(params.id);
+      if (!fetchedRecipe) {
+        notFound();
+      }
+      setRecipe(fetchedRecipe);
+      setLoading(false);
+    }
+    loadRecipe();
+  });
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-5">
+            <div className="md:col-span-2 relative aspect-video md:aspect-auto">
+              <Skeleton className="w-full h-full" />
+            </div>
+            <div className="md:col-span-3">
+              <CardHeader className="pb-4">
+                <Skeleton className="h-8 w-3/4 mb-2" />
+                <Skeleton className="h-6 w-1/2" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-4 mb-6">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+                <Separator className="my-6" />
+                <h3 className="text-2xl font-semibold mb-4">Ingredients</h3>
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <Skeleton className="h-5 w-5 rounded-full mt-1 shrink-0" />
+                      <Skeleton className="h-5 w-full" />
+                    </div>
+                  ))}
+                </div>
+                <Separator className="my-6" />
+                <Skeleton className="h-12 w-full md:w-48" />
+              </CardContent>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   if (!recipe) {
-    notFound();
+    return null; // Should be handled by notFound, but as a fallback.
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-5">
-          <div className="md:col-span-2 relative aspect-video md:aspect-auto">
-            <Image
-              src={recipe.image_url}
-              alt={recipe.title}
-              fill
-              style={{objectFit:"cover"}}
-              className="w-full h-full"
-              data-ai-hint="recipe food"
-            />
-          </div>
+          <RecipeImage src={recipe.image_url} alt={recipe.title} />
           <div className="md:col-span-3">
             <CardHeader className="pb-4">
               <CardTitle className="text-3xl font-bold text-primary leading-tight">
@@ -109,3 +171,19 @@ export default async function RecipeDetailsPage({ params }: { params: { id: stri
     </div>
   );
 }
+
+// We can no longer use generateMetadata as it's for Server Components.
+// We can set the title using document.title in a useEffect if needed, but for now we remove it
+// to resolve the build error of using a server-only function in a client component.
+/*
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const recipe = await getRecipe(params.id);
+  if (!recipe) {
+    return { title: 'Recipe not found' };
+  }
+  return {
+    title: `${recipe.title} | Kitchen Kinetic`,
+    description: `Get the full recipe for ${recipe.title}, published by ${recipe.publisher}.`,
+  };
+}
+*/

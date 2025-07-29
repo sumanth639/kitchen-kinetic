@@ -13,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Loader2, Search, Soup, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 const API_KEY = 'a7145071-f45e-416f-a7d8-98ad828feeef';
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
@@ -24,6 +26,41 @@ const searchFormSchema = z.object({
 type SearchFormValues = z.infer<typeof searchFormSchema>;
 
 const RECIPES_PER_PAGE = 10;
+
+function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  return (
+    <Card className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg aspect-square">
+      <Link href={`/recipes/${recipe.id}`} className="contents">
+        <div className="relative w-full h-full">
+          <Image
+            src={recipe.image_url}
+            alt={recipe.title}
+            fill
+            style={{ objectFit: 'cover' }}
+            className={cn(
+              'transition-all duration-300 group-hover:scale-105',
+              isLoading ? 'opacity-0' : 'opacity-100'
+            )}
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
+            onLoad={() => setIsLoading(false)}
+            data-ai-hint="recipe food"
+          />
+          {isLoading && <Skeleton className="absolute inset-0" />}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+            <CardTitle className="text-sm font-semibold leading-snug text-white">
+              {recipe.title}
+            </CardTitle>
+            <p className="text-xs text-white/80 truncate pt-1">
+              {recipe.publisher}
+            </p>
+          </div>
+        </div>
+      </Link>
+    </Card>
+  );
+}
 
 export default function Home() {
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
@@ -121,8 +158,12 @@ export default function Home() {
 
       <div>
         {loading && (
-           <div className="flex justify-center items-center py-10">
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+             {Array.from({ length: RECIPES_PER_PAGE }).map((_, index) => (
+                <Card key={index} className="overflow-hidden group flex flex-col border rounded-lg aspect-square">
+                    <Skeleton className="w-full h-full" />
+                </Card>
+              ))}
            </div>
         )}
         {error && <p className="text-center text-destructive">{error}</p>}
@@ -130,27 +171,9 @@ export default function Home() {
           <>
             {recipes.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {paginatedRecipes.map((recipe) => (
-                    <Card key={recipe.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg">
-                      <Link href={`/recipes/${recipe.id}`} className="flex flex-col h-full">
-                        <div className="relative w-full aspect-square">
-                           <Image
-                              src={recipe.image_url}
-                              alt={recipe.title}
-                              fill
-                              style={{objectFit:"cover"}}
-                              className="transition-transform duration-300 group-hover:scale-105"
-                              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
-                              data-ai-hint="recipe food"
-                           />
-                        </div>
-                        <CardContent className="p-3 flex flex-col flex-grow">
-                           <CardTitle className="text-sm font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">{recipe.title}</CardTitle>
-                           <p className="text-xs text-muted-foreground truncate pt-1 flex-grow">{recipe.publisher}</p>
-                        </CardContent>
-                      </Link>
-                    </Card>
+                    <RecipeCard key={recipe.id} recipe={recipe} />
                   ))}
                 </div>
                  {totalPages > 1 && (
@@ -187,7 +210,7 @@ export default function Home() {
                 </div>
               )
             )}
-             {!searched && (
+             {!searched && !loading && (
                 <div className="text-center py-10">
                    <Soup className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <p className="text-muted-foreground text-lg">Find delicious recipes from all over the world.</p>
