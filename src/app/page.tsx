@@ -16,6 +16,8 @@ import { Loader2, Search, Soup, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
+import hero from './hero.jpg';
+
 
 
 const API_KEY = process.env.NEXT_PUBLIC_FORKIFY_API_KEY;
@@ -186,7 +188,7 @@ export default function Home() {
        <section className="relative w-full py-20 md:py-32 bg-cover bg-center bg-no-repeat">
           <div className="absolute inset-0 bg-black/60" />
            <Image
-                src="https://placehold.co/1920x1080.png"
+                src={hero}
                 alt="Hero background"
                 fill
                 className="object-cover -z-10"

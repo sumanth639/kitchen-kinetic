@@ -183,7 +183,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col">
-       <section className="relative w-full py-20 md:py-32 bg-cover bg-center bg-no-repeat -mt-14">
+       <section className="relative w-full py-20 md:py-32 bg-cover bg-center bg-no-repeat">
           <div className="absolute inset-0 bg-black/60" />
            <Image
                 src="/hero.jpg"
@@ -191,6 +191,7 @@ export default function Home() {
                 fill
                 className="object-cover -z-10"
                 data-ai-hint="food cooking"
+                priority
             />
           <div className="container mx-auto px-4 relative">
              <div className="text-center">

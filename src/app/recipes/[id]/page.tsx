@@ -36,7 +36,7 @@ function RecipeImage({ src, alt }: { src: string; alt: string }) {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="relative w-full h-64 sm:h-80 lg:h-96">
+    <div className="relative w-full max-w-2xl mx-auto h-64 sm:h-72 lg:h-80">
       <Image
         src={src}
         alt={alt}
@@ -46,9 +46,10 @@ function RecipeImage({ src, alt }: { src: string; alt: string }) {
           'transition-opacity duration-300 rounded-lg',
           isLoading ? 'opacity-0' : 'opacity-100'
         )}
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
         onLoad={() => setIsLoading(false)}
         data-ai-hint="recipe food"
+        priority
       />
       {isLoading && <Skeleton className="absolute inset-0 rounded-lg" />}
     </div>
@@ -159,10 +160,12 @@ export default function RecipeDetailsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
+      <div className="container mx-auto px-4 pt-8 pb-6 lg:pt-12 lg:pb-8 max-w-7xl">
         {/* Hero Section Skeleton */}
         <div className="mb-8">
-          <Skeleton className="w-full h-64 sm:h-80 lg:h-96 rounded-lg mb-6" />
+          <div className="max-w-2xl mx-auto">
+            <Skeleton className="w-full h-64 sm:h-72 lg:h-80 rounded-lg mb-6" />
+          </div>
           <div className="max-w-4xl mx-auto text-center space-y-4">
             <Skeleton className="h-10 w-3/4 mx-auto" />
             <Skeleton className="h-6 w-1/2 mx-auto" />
@@ -212,7 +215,7 @@ export default function RecipeDetailsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
+          <div className="container mx-auto px-4 pt-8 pb-6 lg:pt-12 lg:pb-8 max-w-7xl">
       {/* Hero Section */}
       <div className="mb-8 lg:mb-12">
         <RecipeImage src={recipe.image_url} alt={recipe.title} />
