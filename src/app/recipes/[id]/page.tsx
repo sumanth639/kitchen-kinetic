@@ -33,7 +33,7 @@ function RecipeImage({ src, alt }: { src: string; alt: string }) {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="relative w-full aspect-video md:aspect-square">
+    <div className="relative w-full aspect-[4/3]">
       <Image
         src={src}
         alt={alt}
@@ -80,7 +80,7 @@ export default function RecipeDetailsPage() {
       <div className="container mx-auto px-4 py-8">
         <Card className="overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-2">
-            <Skeleton className="w-full aspect-video md:aspect-square" />
+            <Skeleton className="w-full aspect-[4/3]" />
             <div className="p-6">
               <Skeleton className="h-8 w-3/4 mb-2" />
               <Skeleton className="h-6 w-1/2 mb-6" />
