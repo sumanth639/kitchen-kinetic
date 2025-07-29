@@ -35,7 +35,7 @@ function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
   return (
     <Card className="bg-card text-card-foreground shadow-sm overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg">
       <Link href={`/recipes/${recipe.id}`} className="contents">
-        <div className="relative w-full h-48">
+        <div className="relative w-full h-48 overflow-hidden">
           <Image
             src={recipe.image_url}
             alt={recipe.title}
