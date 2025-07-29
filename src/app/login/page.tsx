@@ -1,20 +1,20 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithRedirect, GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Chrome } from 'lucide-react';
+import { Chrome, Loader2 } from 'lucide-react';
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -28,6 +28,28 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        setGoogleLoading(true);
+        const result = await getRedirectResult(auth);
+        if (result) {
+          router.push('/');
+        }
+      } catch (error: any) {
+        toast({
+          title: 'Google Sign-In Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } finally {
+        setGoogleLoading(false);
+      }
+    };
+    handleRedirectResult();
+  }, [router, toast]);
+
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -57,18 +79,7 @@ export default function LoginPage() {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    try {
-      await signInWithPopup(auth, provider);
-      router.push('/');
-    } catch (error: any) {
-      toast({
-        title: 'Google Sign-In Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setGoogleLoading(false);
-    }
+    await signInWithRedirect(auth, provider);
   };
 
   return (
@@ -91,7 +102,7 @@ export default function LoginPage() {
               {form.formState.errors.password && <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>}
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? <Loader2 className="animate-spin" /> : 'Login'}
             </Button>
           </form>
           <div className="relative my-4">
@@ -103,7 +114,7 @@ export default function LoginPage() {
             </div>
           </div>
           <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={googleLoading}>
-            {googleLoading ? 'Signing in...' : <><Chrome className="mr-2 h-4 w-4" /> Google</>}
+            {googleLoading ? <Loader2 className="animate-spin" /> : <><Chrome className="mr-2 h-4 w-4" /> Google</>}
           </Button>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Don't have an account?{' '}
