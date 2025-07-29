@@ -82,7 +82,7 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4 py-8">
       <section className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">Kitchen Kinetic</h1>
+        <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">FlavorVerse</h1>
         <p className="text-lg md:text-xl text-muted-foreground">Discover your next favorite meal.</p>
       </section>
 
@@ -131,9 +131,9 @@ export default function Home() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {paginatedRecipes.map((recipe) => (
-                    <Card key={recipe.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg">
+                    <Card key={recipe.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg aspect-square">
                       <Link href={`/recipes/${recipe.id}`} className="contents">
-                        <div className="relative aspect-square">
+                        <div className="relative w-full h-full">
                            <Image
                               src={recipe.image_url}
                               alt={recipe.title}
@@ -144,13 +144,10 @@ export default function Home() {
                               data-ai-hint="recipe food"
                            />
                         </div>
-                        <CardHeader className="flex-grow p-3">
-                          <CardTitle className="text-sm font-semibold leading-snug">{recipe.title}</CardTitle>
-                        </CardHeader>
-                        <CardFooter className="p-3 pt-0">
-                          <p className="text-xs text-muted-foreground truncate">{recipe.publisher}</p>
-
-                        </CardFooter>
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                           <CardTitle className="text-sm font-semibold leading-snug text-white">{recipe.title}</CardTitle>
+                           <p className="text-xs text-white/80 truncate pt-1">{recipe.publisher}</p>
+                        </div>
                       </Link>
                     </Card>
                   ))}

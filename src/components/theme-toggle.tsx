@@ -5,16 +5,20 @@ import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState('dark');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     const storedTheme = localStorage.getItem('theme');
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const initialTheme = storedTheme || systemTheme;
-    setTheme(initialTheme);
-    document.documentElement.classList.toggle('dark', initialTheme === 'dark');
+    if (storedTheme) {
+      setTheme(storedTheme);
+      document.documentElement.classList.toggle('dark', storedTheme === 'dark');
+    } else {
+      // If no theme is stored, we default to dark as per request.
+      localStorage.setItem('theme', 'dark');
+      document.documentElement.classList.add('dark');
+    }
   }, []);
 
   const toggleTheme = () => {
@@ -25,7 +29,8 @@ export function ThemeToggle() {
   };
 
   if (!mounted) {
-    return <Button variant="ghost" size="icon" disabled={true}><Sun className="h-[1.2rem] w-[1.2rem]"/></Button>;
+    // Render a disabled button to prevent layout shift and interaction before hydration
+    return <Button variant="ghost" size="icon" disabled={true}><Moon className="h-[1.2rem] w-[1.2rem]"/></Button>;
   }
 
   return (
