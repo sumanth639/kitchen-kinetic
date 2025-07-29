@@ -42,6 +42,8 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --gradient-start: #e32e74;
+    --gradient-end: #ffc200;
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -86,10 +88,12 @@ body {
   body {
     @apply bg-background text-foreground;
   }
-  input, textarea {
-    @apply !border-input;
-  }
-  .dark input, .dark textarea {
-    @apply !border-input;
+}
+
+@layer utilities {
+  .border-gradient {
+    border-width: 1px;
+    border-style: solid;
+    border-image: linear-gradient(to right, var(--gradient-start), var(--gradient-end)) 1;
   }
 }
