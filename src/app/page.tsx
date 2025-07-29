@@ -22,7 +22,7 @@ const searchFormSchema = z.object({
 
 type SearchFormValues = z.infer<typeof searchFormSchema>;
 
-const RECIPES_PER_PAGE = 8;
+const RECIPES_PER_PAGE = 10;
 
 export default function Home() {
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
@@ -129,26 +129,26 @@ export default function Home() {
           <>
             {recipes.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {paginatedRecipes.map((recipe) => (
                     <Card key={recipe.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg">
                       <Link href={`/recipes/${recipe.id}`} className="contents">
-                        <div className="relative aspect-[4/3]">
+                        <div className="relative aspect-square">
                            <Image
                               src={recipe.image_url}
                               alt={recipe.title}
                               fill
                               style={{objectFit:"cover"}}
                               className="transition-transform duration-300 group-hover:scale-105"
-                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
                               data-ai-hint="recipe food"
                            />
                         </div>
-                        <CardHeader className="flex-grow p-4">
-                          <CardTitle className="text-base font-semibold leading-snug">{recipe.title}</CardTitle>
+                        <CardHeader className="flex-grow p-3">
+                          <CardTitle className="text-sm font-semibold leading-snug">{recipe.title}</CardTitle>
                         </CardHeader>
-                        <CardFooter className="p-4 pt-0">
-                          <p className="text-sm text-muted-foreground truncate">{recipe.publisher}</p>
+                        <CardFooter className="p-3 pt-0">
+                          <p className="text-xs text-muted-foreground truncate">{recipe.publisher}</p>
                         </CardFooter>
                       </Link>
                     </Card>
