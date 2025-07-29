@@ -14,8 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Chrome, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { GoogleIcon } from '@/components/icons/google-icon';
 
 const signupFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -47,7 +48,7 @@ export default function SignupPage() {
             title: 'Account created successfully',
             description: `Welcome, ${result.user.email}!`,
           });
-          // This will trigger the useAuth hook to update and the above useEffect will redirect.
+          router.push('/');
         }
       } catch (error: any) {
         toast({
@@ -90,7 +91,6 @@ export default function SignupPage() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
     await signInWithRedirect(auth, provider).catch((error) => {
        toast({
           title: 'Google Sign-Up Error',
@@ -141,7 +141,7 @@ export default function SignupPage() {
             </div>
           </div>
           <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={googleLoading}>
-             {googleLoading ? <Loader2 className="animate-spin" /> : <><Chrome className="mr-2 h-4 w-4" /> Google</>}
+             {googleLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon className="mr-2 h-4 w-4" /> Google</>}
           </Button>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Already have an account?{' '}
