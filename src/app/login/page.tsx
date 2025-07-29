@@ -32,9 +32,9 @@ export default function LoginPage() {
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
-        setGoogleLoading(true);
         const result = await getRedirectResult(auth);
         if (result) {
+          // User signed in.
           router.push('/');
         }
       } catch (error: any) {
@@ -43,8 +43,6 @@ export default function LoginPage() {
           description: error.message,
           variant: 'destructive',
         });
-      } finally {
-        setGoogleLoading(false);
       }
     };
     handleRedirectResult();
@@ -79,7 +77,16 @@ export default function LoginPage() {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    await signInWithRedirect(auth, provider);
+    // It's better to handle potential errors here with a catch, 
+    // but the primary error handling will be in the useEffect after redirect.
+    await signInWithRedirect(auth, provider).catch((error) => {
+       toast({
+          title: 'Google Sign-In Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+        setGoogleLoading(false);
+    });
   };
 
   return (

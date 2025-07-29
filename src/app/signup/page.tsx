@@ -32,7 +32,6 @@ export default function SignupPage() {
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
-        setGoogleLoading(true);
         const result = await getRedirectResult(auth);
         if (result) {
           router.push('/');
@@ -43,8 +42,6 @@ export default function SignupPage() {
           description: error.message,
           variant: 'destructive',
         });
-      } finally {
-        setGoogleLoading(false);
       }
     };
     handleRedirectResult();
@@ -79,7 +76,14 @@ export default function SignupPage() {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    await signInWithRedirect(auth, provider);
+    await signInWithRedirect(auth, provider).catch((error) => {
+       toast({
+          title: 'Google Sign-In Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+        setGoogleLoading(false);
+    });
   };
 
   return (
