@@ -92,8 +92,9 @@ body {
 
 @layer utilities {
   .border-gradient {
-    border-width: 1px;
-    border-style: solid;
-    border-image: linear-gradient(to right, var(--gradient-start), var(--gradient-end)) 1;
+    border: 1px solid transparent;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    background-image: linear-gradient(hsl(var(--background)), hsl(var(--background))), linear-gradient(to right, var(--gradient-start), var(--gradient-end));
   }
 }
