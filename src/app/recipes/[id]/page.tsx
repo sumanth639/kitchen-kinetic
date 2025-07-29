@@ -57,21 +57,22 @@ function RecipeImage({ src, alt }: { src: string; alt: string }) {
 export default function RecipeDetailsPage({ params }: { params: { id: string } }) {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
+  const id = params.id;
 
   useEffect(() => {
     async function loadRecipe() {
       setLoading(true);
-      const fetchedRecipe = await getRecipe(params.id);
+      const fetchedRecipe = await getRecipe(id);
       if (!fetchedRecipe) {
         notFound();
       }
       setRecipe(fetchedRecipe);
       setLoading(false);
     }
-    if (params.id) {
+    if (id) {
         loadRecipe();
     }
-  }, [params.id]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -173,19 +174,3 @@ export default function RecipeDetailsPage({ params }: { params: { id: string } }
     </div>
   );
 }
-
-// We can no longer use generateMetadata as it's for Server Components.
-// We can set the title using document.title in a useEffect if needed, but for now we remove it
-// to resolve the build error of using a server-only function in a client component.
-/*
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  const recipe = await getRecipe(params.id);
-  if (!recipe) {
-    return { title: 'Recipe not found' };
-  }
-  return {
-    title: `${recipe.title} | Kitchen Kinetic`,
-    description: `Get the full recipe for ${recipe.title}, published by ${recipe.publisher}.`,
-  };
-}
-*/
