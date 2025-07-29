@@ -82,6 +82,7 @@ export default function RecipeDetailsPage() {
 
   useEffect(() => {
     if (!recipe || !originalIngredients.length) return;
+    if (servings === recipe.servings) return;
 
     const newIngredients = originalIngredients.map(ing => {
       if (ing.quantity === null) {
@@ -98,7 +99,8 @@ export default function RecipeDetailsPage() {
         ingredients: newIngredients,
       };
     });
-  }, [servings, recipe?.servings, originalIngredients]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [servings, originalIngredients]);
 
 
   const handleServingsChange = (change: number) => {
@@ -160,7 +162,7 @@ export default function RecipeDetailsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow p-0 flex flex-col">
-              <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6 text-muted-foreground">
+              <div className="flex flex-wrap gap-x-6 gap-y-4 mb-6 text-muted-foreground">
                   <div className="flex items-center gap-2">
                       <Clock className="h-5 w-5"/>
                       <span>{recipe.cooking_time} minutes</span>
@@ -169,12 +171,12 @@ export default function RecipeDetailsPage() {
                       <Users className="h-5 w-5"/>
                       <span>Serves {servings}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleServingsChange(-1)} disabled={servings <= 1}>
+                  <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 p-1 rounded-md">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:text-primary" onClick={() => handleServingsChange(-1)} disabled={servings <= 1}>
                       <Minus className="h-4 w-4" />
                     </Button>
-                    <span className="font-bold">{servings}</span>
-                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleServingsChange(1)}>
+                    <span className="font-bold text-primary w-4 text-center">{servings}</span>
+                     <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:text-primary" onClick={() => handleServingsChange(1)}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
