@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { type Recipe } from '@/types';
@@ -58,7 +58,7 @@ export default function RecipeDetailsPage({ params }: { params: { id: string } }
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useState(() => {
+  useEffect(() => {
     async function loadRecipe() {
       setLoading(true);
       const fetchedRecipe = await getRecipe(params.id);
@@ -68,8 +68,10 @@ export default function RecipeDetailsPage({ params }: { params: { id: string } }
       setRecipe(fetchedRecipe);
       setLoading(false);
     }
-    loadRecipe();
-  });
+    if (params.id) {
+        loadRecipe();
+    }
+  }, [params.id]);
 
   if (loading) {
     return (
