@@ -179,6 +179,7 @@ export default function Home() {
     }
   };
 
+  const displayRecipes = hasSearched ? paginatedRecipes : recipes.slice(0, RECIPES_PER_PAGE);
 
   return (
     <div className="flex flex-col">
@@ -257,11 +258,11 @@ export default function Home() {
                 {recipes.length > 0 ? (
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    {paginatedRecipes.map((recipe) => (
+                    {displayRecipes.map((recipe) => (
                         <RecipeCard key={recipe.id} recipe={recipe} />
                     ))}
                     </div>
-                    {totalPages > 1 && (
+                    {hasSearched && totalPages > 1 && (
                     <div className="flex justify-center items-center gap-4 mt-12">
                         <Button
                         variant="outline"
