@@ -8,7 +8,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<'tex
     return (
        <div
         className={cn(
-          "relative rounded-md before:absolute before:inset-0 before:-z-10 before:bg-gradient-to-r before:from-primary/50 before:to-primary before:opacity-0 before:transition-opacity before:duration-300 focus-within:before:opacity-100"
+          "relative rounded-md before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-gradient-to-r before:from-primary/50 before:to-primary before:p-[1px] before:opacity-0 before:transition-opacity before:duration-300 before:[mask:linear-gradient(black,black)_content-box,linear-gradient(black,black)] before:[mask-composite:exclude] focus-within:before:opacity-100"
         )}
       >
         <textarea
