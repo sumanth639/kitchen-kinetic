@@ -10,7 +10,7 @@ import * as z from 'zod';
 import { type RecipeListItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardTitle } from '@/components/ui/card';
+import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Loader2, Search, Soup, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -130,11 +130,11 @@ export default function Home() {
           <>
             {recipes.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                   {paginatedRecipes.map((recipe) => (
-                    <Card key={recipe.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg aspect-square">
-                      <Link href={`/recipes/${recipe.id}`} className="contents">
-                        <div className="relative w-full h-full">
+                    <Card key={recipe.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg">
+                      <Link href={`/recipes/${recipe.id}`} className="flex flex-col h-full">
+                        <div className="relative w-full aspect-square">
                            <Image
                               src={recipe.image_url}
                               alt={recipe.title}
@@ -145,10 +145,10 @@ export default function Home() {
                               data-ai-hint="recipe food"
                            />
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-                           <CardTitle className="text-sm font-semibold leading-snug text-white">{recipe.title}</CardTitle>
-                           <p className="text-xs text-white/80 truncate pt-1">{recipe.publisher}</p>
-                        </div>
+                        <CardContent className="p-3 flex flex-col flex-grow">
+                           <CardTitle className="text-sm font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">{recipe.title}</CardTitle>
+                           <p className="text-xs text-muted-foreground truncate pt-1 flex-grow">{recipe.publisher}</p>
+                        </CardContent>
                       </Link>
                     </Card>
                   ))}
