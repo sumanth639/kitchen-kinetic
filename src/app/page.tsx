@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { Loader2, Search, Soup } from 'lucide-react';
+import { Loader2, Search, Soup, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const API_KEY = 'a7145071-f45e-416f-a7d8-98ad828feeef';
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
@@ -22,11 +22,14 @@ const searchFormSchema = z.object({
 
 type SearchFormValues = z.infer<typeof searchFormSchema>;
 
+const RECIPES_PER_PAGE = 8;
+
 export default function Home() {
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const form = useForm<SearchFormValues>({
     resolver: zodResolver(searchFormSchema),
@@ -40,6 +43,7 @@ export default function Home() {
     setError(null);
     setSearched(true);
     setRecipes([]);
+    setCurrentPage(1);
 
     try {
       const response = await fetch(`${API_URL}?search=${values.searchTerm}&key=${API_KEY}`);
@@ -59,6 +63,21 @@ export default function Home() {
       setLoading(false);
     }
   }
+  
+  const totalPages = Math.ceil(recipes.length / RECIPES_PER_PAGE);
+  const paginatedRecipes = recipes.slice(
+    (currentPage - 1) * RECIPES_PER_PAGE,
+    currentPage * RECIPES_PER_PAGE
+  );
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -109,32 +128,58 @@ export default function Home() {
         {!loading && !error && (
           <>
             {recipes.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {recipes.map((recipe) => (
-                  <Link href={`/recipes/${recipe.id}`} key={recipe.id} passHref>
-                    <Card className="h-full flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                      <CardHeader className="p-0">
-                         <div className="aspect-video relative">
-                            <Image
-                               src={recipe.image_url}
-                               alt={recipe.title}
-                               fill
-                               style={{objectFit:"cover"}}
-                               className="rounded-t-lg"
-                               data-ai-hint="recipe food"
-                            />
-                         </div>
-                      </CardHeader>
-                      <CardContent className="flex-grow p-4">
-                        <CardTitle className="text-lg leading-snug mb-1">{recipe.title}</CardTitle>
-                      </CardContent>
-                       <CardFooter className="p-4 pt-0">
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {paginatedRecipes.map((recipe) => (
+                    <Card key={recipe.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 flex flex-col">
+                      <Link href={`/recipes/${recipe.id}`} className="contents">
+                        <div className="relative aspect-video">
+                           <Image
+                              src={recipe.image_url}
+                              alt={recipe.title}
+                              fill
+                              style={{objectFit:"cover"}}
+                              className="transition-transform duration-300 group-hover:scale-105"
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                              data-ai-hint="recipe food"
+                           />
+                        </div>
+                        <CardHeader className="flex-grow">
+                          <CardTitle className="text-lg leading-snug">{recipe.title}</CardTitle>
+                        </CardHeader>
+                        <CardFooter>
                           <p className="text-sm text-muted-foreground truncate">{recipe.publisher}</p>
-                       </CardFooter>
+                        </CardFooter>
+                      </Link>
                     </Card>
-                  </Link>
-                ))}
-              </div>
+                  ))}
+                </div>
+                 {totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-4 mt-12">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handlePrevPage}
+                      disabled={currentPage === 1}
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                    <span className="text-sm font-medium">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      aria-label="Next page"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </Button>
+                  </div>
+                )}
+              </>
             ) : (
               searched && (
                 <div className="text-center py-10">
