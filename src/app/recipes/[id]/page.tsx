@@ -152,7 +152,7 @@ export default function RecipeDetailsPage() {
     <div className="container mx-auto px-4 py-8">
       <Card className="overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-2">
-          <div className="relative aspect-square">
+          <div className="relative ">
             <RecipeImage src={recipe.image_url} alt={recipe.title} />
           </div>
           <div className="flex flex-col p-6">
