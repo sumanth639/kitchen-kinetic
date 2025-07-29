@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
     return { title: 'Recipe not found' };
   }
   return {
-    title: `${recipe.title} | FlavorVerse`,
+    title: `${recipe.title} | Kitchen Kinetic`,
     description: `Get the full recipe for ${recipe.title}, published by ${recipe.publisher}.`,
   };
 }

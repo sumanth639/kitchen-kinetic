@@ -4,7 +4,7 @@ import { Header } from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'FlavorVerse',
+  title: 'Kitchen Kinetic',
   description: 'Search for your favorite recipes',
 };
 
