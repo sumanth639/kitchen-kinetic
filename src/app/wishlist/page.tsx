@@ -38,7 +38,7 @@ function WishlistCard({ recipe, onRemove }: { recipe: WishlistItem; onRemove: (i
                 'transition-transform duration-300 group-hover:scale-105',
                 isLoading ? 'opacity-0' : 'opacity-100'
                 )}
-                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                 onLoad={() => setIsLoading(false)}
                 data-ai-hint="recipe food"
             />
@@ -115,14 +115,14 @@ export default function WishlistPage() {
     if (loading || !user) {
         return (
             <div className="container mx-auto px-4 py-8">
-                 <Card className="w-full max-w-4xl mx-auto">
+                 <Card className="w-full max-w-6xl mx-auto">
                     <CardHeader>
                         <Skeleton className="h-8 w-48" />
                          <Skeleton className="h-4 w-64" />
                     </CardHeader>
                     <CardContent>
-                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                           {Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-64 w-full" />)}
+                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                           {Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-64 w-full" />)}
                        </div>
                     </CardContent>
                 </Card>
@@ -132,7 +132,7 @@ export default function WishlistPage() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <Card className="w-full max-w-4xl mx-auto">
+            <Card className="w-full max-w-6xl mx-auto">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-2xl">
                         <Heart className="h-6 w-6 text-primary"/>
@@ -142,11 +142,11 @@ export default function WishlistPage() {
                 </Header>
                 <CardContent>
                     {wishlistLoading ? (
-                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                           {Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-64 w-full" />)}
+                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                           {Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-64 w-full" />)}
                        </div>
                     ) : wishlist.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                             {wishlist.map(item => (
                                 <WishlistCard key={item.id} recipe={item} onRemove={handleRemoveFromWishlist} />
                             ))}

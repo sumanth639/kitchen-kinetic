@@ -38,7 +38,7 @@ function RecipeImage({ src, alt }: { src: string; alt: string }) {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-64 md:h-full">
       <Image
         src={src}
         alt={alt}
@@ -48,6 +48,7 @@ function RecipeImage({ src, alt }: { src: string; alt: string }) {
           'transition-opacity duration-300 rounded-t-lg md:rounded-l-lg md:rounded-t-none',
           isLoading ? 'opacity-0' : 'opacity-100'
         )}
+        sizes="(max-width: 768px) 100vw, 50vw"
         onLoad={() => setIsLoading(false)}
         data-ai-hint="recipe food"
       />
@@ -83,7 +84,7 @@ export default function RecipeDetailsPage() {
       } else {
         setRecipe(fetchedRecipe);
         setServings(fetchedRecipe.servings);
-        setOriginalIngredients(fetchedRecipe.ingredients);
+        setOriginalIngredients(JSON.parse(JSON.stringify(fetchedRecipe.ingredients)));
       }
       setLoading(false);
     }
@@ -163,11 +164,11 @@ export default function RecipeDetailsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         <Card className="overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="aspect-square md:aspect-auto">
-              <Skeleton className="w-full h-full" />
+              <Skeleton className="w-full h-full min-h-[300px]" />
             </div>
             <div className="p-6 md:p-8">
               <Skeleton className="h-8 w-3/4 mb-2" />
@@ -203,15 +204,15 @@ export default function RecipeDetailsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
       <Card className="overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-2">
-          <div className="relative ">
+          <div className="relative">
             <RecipeImage src={recipe.image_url} alt={recipe.title} />
           </div>
-          <div className="flex flex-col p-6 md:p-8">
+          <div className="flex flex-col p-4 sm:p-6 md:p-8">
             <CardHeader className="p-0 pb-4">
-              <CardTitle className="text-3xl font-bold text-primary leading-tight">
+              <CardTitle className="text-2xl sm:text-3xl font-bold text-primary leading-tight">
                 {recipe.title}
               </CardTitle>
               <CardDescription className="flex items-center gap-2 pt-2 text-base">
@@ -260,14 +261,14 @@ export default function RecipeDetailsPage() {
               
               <Separator className="my-6" />
               
-              <div className="flex gap-4 items-center">
-                  <Button asChild size="lg" className="w-full md:w-auto mt-auto">
+              <div className="flex flex-col sm:flex-row gap-4 items-center">
+                  <Button asChild size="lg" className="w-full sm:w-auto mt-auto">
                     <a href={recipe.source_url} target="_blank" rel="noopener noreferrer">
                       Cooking Instructions
                       <ExternalLink className="ml-2 h-5 w-5" />
                     </a>
                   </Button>
-                   <Button size="lg" variant={isInWishlist ? "secondary" : "outline"} className="mt-auto" onClick={handleWishlistToggle} disabled={wishlistLoading}>
+                   <Button size="lg" variant={isInWishlist ? "secondary" : "outline"} className="w-full sm:w-auto mt-auto" onClick={handleWishlistToggle} disabled={wishlistLoading}>
                        <Heart className={cn("mr-2 h-5 w-5", isInWishlist && "fill-destructive text-destructive")} />
                        {isInWishlist ? "Saved" : "Save"}
                    </Button>

@@ -84,7 +84,7 @@ export default function ProfilePage() {
     if (loading || !user) {
         return (
             <div className="container mx-auto px-4 py-8">
-                 <Card className="w-full max-w-4xl mx-auto">
+                 <Card className="w-full max-w-6xl mx-auto">
                     <CardHeader className="flex flex-row items-center gap-4">
                         <Skeleton className="h-16 w-16 rounded-full" />
                         <div className="space-y-2">
@@ -103,19 +103,19 @@ export default function ProfilePage() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <Card className="w-full max-w-4xl mx-auto">
-                <CardHeader className="flex flex-row items-center gap-4">
+            <Card className="w-full max-w-6xl mx-auto">
+                <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     <Avatar className="h-16 w-16">
                         <AvatarImage src={user.photoURL || undefined} />
                         <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <div>
+                    <div className="flex-grow">
                         <CardTitle className="text-2xl">{user.displayName || 'User'}'s Dashboard</CardTitle>
                         <p className="text-muted-foreground">{user.email}</p>
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <h2 className="text-xl font-semibold">My Recipes</h2>
                         <Button asChild>
                             <Link href="/recipes/new">
@@ -125,22 +125,26 @@ export default function ProfilePage() {
                         </Button>
                     </div>
                     {recipesLoading ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            {Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-48 w-full rounded-lg" />)}
                         </div>
                     ) : recipes.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             {recipes.map(recipe => (
-                                <Card key={recipe.id} className="flex flex-col">
-                                    {recipe.imageUrl && (
-                                         <div className="relative w-full h-32">
+                                <Card key={recipe.id} className="flex flex-col overflow-hidden">
+                                    {recipe.imageUrl ? (
+                                         <div className="relative w-full h-40">
                                             <Image src={recipe.imageUrl} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-t-lg" data-ai-hint="recipe food" />
                                          </div>
+                                    ) : (
+                                        <div className="h-40 bg-secondary flex items-center justify-center rounded-t-lg">
+                                            <BookUser className="w-10 h-10 text-muted-foreground" />
+                                        </div>
                                     )}
-                                    <CardHeader className="flex-grow">
-                                        <CardTitle className="text-lg">{recipe.title}</CardTitle>
+                                    <CardHeader className="flex-grow p-4">
+                                        <CardTitle className="text-lg leading-tight">{recipe.title}</CardTitle>
                                     </CardHeader>
-                                    <CardFooter className="p-2 border-t">
+                                    <CardFooter className="p-2 border-t mt-auto">
                                          <AlertDialog>
                                             <AlertDialogTrigger asChild>
                                                 <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10">
