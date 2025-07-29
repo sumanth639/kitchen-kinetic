@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { type Recipe } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,10 +54,11 @@ function RecipeImage({ src, alt }: { src: string; alt: string }) {
 
 // Due to using a client component inside, the page itself can't be fully static at build time
 // in the same way. We keep the data fetching here.
-export default function RecipeDetailsPage({ params }: { params: { id: string } }) {
+export default function RecipeDetailsPage() {
+  const params = useParams();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
-  const id = params.id;
+  const id = params.id as string;
 
   useEffect(() => {
     async function loadRecipe() {
