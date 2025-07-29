@@ -195,7 +195,7 @@ export default function Home() {
             />
           <div className="container mx-auto px-4 relative">
              <div className="text-center">
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">Kitchen Kinetic</h1>
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">FlavorVerse</h1>
                 <p className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto">The ultimate destination to discover, create, and share your favorite recipes.</p>
             </div>
              <div className="max-w-2xl mx-auto mt-12">
@@ -208,18 +208,18 @@ export default function Home() {
                         <FormItem className="flex-grow">
                         <FormControl>
                             <div className="relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
-                            <Input placeholder="Search for pizza, pasta, salad..." className="pl-14 h-14 text-lg" {...field} />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground" />
+                            <Input placeholder="Search for pizza, pasta, salad..." className="pl-16 h-16 text-xl" {...field} />
                             </div>
                         </FormControl>
                         <FormMessage />
                         </FormItem>
                     )}
                     />
-                    <Button type="submit" size="lg" className="h-14" disabled={loading && hasSearched}>
+                    <Button type="submit" size="lg" className="h-16 px-8 text-lg" disabled={loading && hasSearched}>
                     {loading && hasSearched ? (
                         <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                         Searching
                         </>
                     ) : (

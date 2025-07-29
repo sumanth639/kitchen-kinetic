@@ -16,7 +16,7 @@ import { Loader2, Search, Soup, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
-import hero from './hero.jpg';
+
 
 
 
@@ -186,14 +186,14 @@ export default function Home() {
   return (
     <div className="flex flex-col">
        <section className="relative w-full py-20 md:py-32 bg-cover bg-center bg-no-repeat">
-          <div className="absolute inset-0 bg-black/60" />
-           <Image
-                src={hero}
-                alt="Hero background"
-                fill
-                className="object-cover -z-10"
-                data-ai-hint="food cooking"
-            />
+          <div className="absolute inset-0 bg-black/20" />
+          <Image
+  src="/hero.jpg"
+  alt="Hero background"
+  fill
+  className="object-cover -z-10"
+  data-ai-hint="food cooking"
+/>
           <div className="container mx-auto px-4 relative">
              <div className="text-center">
                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">Kitchen Kinetic</h1>
