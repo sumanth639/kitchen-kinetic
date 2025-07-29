@@ -131,9 +131,9 @@ export default function Home() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {paginatedRecipes.map((recipe) => (
-                    <Card key={recipe.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 flex flex-col">
+                    <Card key={recipe.id} className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg">
                       <Link href={`/recipes/${recipe.id}`} className="contents">
-                        <div className="relative aspect-video">
+                        <div className="relative aspect-[4/3]">
                            <Image
                               src={recipe.image_url}
                               alt={recipe.title}
@@ -144,10 +144,10 @@ export default function Home() {
                               data-ai-hint="recipe food"
                            />
                         </div>
-                        <CardHeader className="flex-grow">
-                          <CardTitle className="text-lg leading-snug">{recipe.title}</CardTitle>
+                        <CardHeader className="flex-grow p-4">
+                          <CardTitle className="text-base font-semibold leading-snug">{recipe.title}</CardTitle>
                         </CardHeader>
-                        <CardFooter>
+                        <CardFooter className="p-4 pt-0">
                           <p className="text-sm text-muted-foreground truncate">{recipe.publisher}</p>
                         </CardFooter>
                       </Link>
