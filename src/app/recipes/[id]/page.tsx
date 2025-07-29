@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Clock, Users, ChefHat, ExternalLink, CheckCircle2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
-const API_KEY = 'a0f7b1e1-e179-44d7-9388-34812065914e';
+const API_KEY = 'a7145071-f45e-416f-a7d8-98ad828feeef';
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
 
 async function getRecipe(id: string): Promise<Recipe | null> {

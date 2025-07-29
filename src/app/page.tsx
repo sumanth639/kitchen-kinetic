@@ -13,7 +13,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Loader2, Search, Soup } from 'lucide-react';
 
-const API_KEY = 'a0f7b1e1-e179-44d7-9388-34812065914e';
+const API_KEY = 'a7145071-f45e-416f-a7d8-98ad828feeef';
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
 
 const searchFormSchema = z.object({
