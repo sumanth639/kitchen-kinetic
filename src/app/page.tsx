@@ -9,7 +9,7 @@ import * as z from 'zod';
 import { type RecipeListItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Loader2, Search, Soup, ChevronLeft, ChevronRight } from 'lucide-react';
 
