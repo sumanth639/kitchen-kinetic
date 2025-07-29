@@ -39,7 +39,7 @@ export default function WishlistPage() {
                 <CardHeader>
                     <CardTitle>My Wishlist</CardTitle>
                     <CardDescription>The recipes you've saved for later.</CardDescription>
-                </CardHeader>
+                </Header>
                 <CardContent>
                     <p>Your saved recipes will appear here.</p>
                 </CardContent>
