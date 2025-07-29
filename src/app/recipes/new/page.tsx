@@ -21,6 +21,7 @@ import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 
 const recipeFormSchema = z.object({
   title: z.string().min(3, { message: 'Title must be at least 3 characters long.' }),
+  imageUrl: z.string().url({ message: 'Please enter a valid image URL.' }).optional().or(z.literal('')),
   cookingTime: z.coerce.number().min(1, { message: 'Cooking time must be at least 1 minute.' }),
   servings: z.coerce.number().min(1, { message: 'Servings must be at least 1.' }),
   ingredients: z.array(
@@ -43,6 +44,7 @@ export default function CreateRecipePage() {
         resolver: zodResolver(recipeFormSchema),
         defaultValues: {
             title: '',
+            imageUrl: '',
             cookingTime: 30,
             servings: 4,
             ingredients: [{ value: '' }],
@@ -136,6 +138,20 @@ export default function CreateRecipePage() {
                                         <FormLabel>Recipe Title</FormLabel>
                                         <FormControl>
                                             <Input placeholder="e.g., Delicious Chocolate Cake" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                             <FormField
+                                control={form.control}
+                                name="imageUrl"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Image URL (Optional)</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="https://example.com/image.jpg" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

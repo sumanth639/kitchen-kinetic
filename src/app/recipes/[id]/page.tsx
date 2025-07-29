@@ -7,10 +7,15 @@ import { notFound, useParams } from 'next/navigation';
 import { type Recipe, type Ingredient } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, Users, ChefHat, ExternalLink, CheckCircle2, Minus, Plus } from 'lucide-react';
+import { Clock, Users, ChefHat, ExternalLink, CheckCircle2, Minus, Plus, Heart } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { db } from '@/lib/firebase';
+import { doc, getDoc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+
 
 const API_KEY = 'a7145071-f45e-416f-a7d8-98ad828feeef';
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
@@ -53,10 +58,15 @@ function RecipeImage({ src, alt }: { src: string; alt: string }) {
 
 export default function RecipeDetailsPage() {
   const params = useParams();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [servings, setServings] = useState(0);
   const [originalIngredients, setOriginalIngredients] = useState<Ingredient[]>([]);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
 
   const id = typeof params.id === 'string' ? params.id : '';
 
@@ -81,9 +91,19 @@ export default function RecipeDetailsPage() {
   }, [id]);
 
   useEffect(() => {
+    if (!user || !id) return;
+
+    const wishlistRef = doc(db, 'users', user.uid, 'wishlist', id);
+    const unsubscribe = onSnapshot(wishlistRef, (doc) => {
+        setIsInWishlist(doc.exists());
+    });
+
+    return () => unsubscribe();
+  }, [id, user]);
+
+  useEffect(() => {
     if (!recipe || !originalIngredients.length) return;
     
-    // Only update ingredients if servings have changed from the original
     if (servings === recipe.servings && recipe.ingredients.length === originalIngredients.length) return;
 
     const newIngredients = originalIngredients.map(ing => {
@@ -108,6 +128,37 @@ export default function RecipeDetailsPage() {
   const handleServingsChange = (change: number) => {
     setServings(prev => Math.max(1, prev + change));
   };
+  
+  const handleWishlistToggle = async () => {
+    if (!user) {
+        toast({ title: "Please log in", description: "You need to be logged in to save recipes to your wishlist.", variant: "destructive"});
+        return;
+    }
+    if (!recipe) return;
+
+    setWishlistLoading(true);
+    const wishlistRef = doc(db, 'users', user.uid, 'wishlist', recipe.id);
+    
+    try {
+        if (isInWishlist) {
+            await deleteDoc(wishlistRef);
+            toast({ title: "Removed from wishlist", description: `"${recipe.title}" has been removed from your wishlist.`});
+        } else {
+            await setDoc(wishlistRef, {
+                title: recipe.title,
+                image_url: recipe.image_url,
+                publisher: recipe.publisher,
+                addedAt: new Date()
+            });
+            toast({ title: "Added to wishlist!", description: `"${recipe.title}" has been added to your wishlist.`});
+        }
+    } catch (error) {
+        console.error("Error toggling wishlist:", error);
+        toast({ title: "Error", description: "There was a problem updating your wishlist. Please try again.", variant: "destructive" });
+    } finally {
+        setWishlistLoading(false);
+    }
+  };
 
 
   if (loading) {
@@ -118,7 +169,7 @@ export default function RecipeDetailsPage() {
             <div className="aspect-square md:aspect-auto">
               <Skeleton className="w-full h-full" />
             </div>
-            <div className="p-6">
+            <div className="p-6 md:p-8">
               <Skeleton className="h-8 w-3/4 mb-2" />
               <Skeleton className="h-6 w-1/2 mb-6" />
               <div className="flex flex-wrap gap-4 mb-6">
@@ -135,8 +186,11 @@ export default function RecipeDetailsPage() {
                   </div>
                 ))}
               </div>
-              <Separator className="my-6" />
-              <Skeleton className="h-12 w-full md:w-48" />
+               <Separator className="my-6" />
+               <div className="flex gap-4">
+                    <Skeleton className="h-12 w-full md:w-48" />
+                    <Skeleton className="h-12 w-12 rounded-full" />
+               </div>
             </div>
           </div>
         </Card>
@@ -155,7 +209,7 @@ export default function RecipeDetailsPage() {
           <div className="relative ">
             <RecipeImage src={recipe.image_url} alt={recipe.title} />
           </div>
-          <div className="flex flex-col p-6">
+          <div className="flex flex-col p-6 md:p-8">
             <CardHeader className="p-0 pb-4">
               <CardTitle className="text-3xl font-bold text-primary leading-tight">
                 {recipe.title}
@@ -205,13 +259,20 @@ export default function RecipeDetailsPage() {
               <div className="flex-grow"></div>
               
               <Separator className="my-6" />
+              
+              <div className="flex gap-4 items-center">
+                  <Button asChild size="lg" className="w-full md:w-auto mt-auto">
+                    <a href={recipe.source_url} target="_blank" rel="noopener noreferrer">
+                      Cooking Instructions
+                      <ExternalLink className="ml-2 h-5 w-5" />
+                    </a>
+                  </Button>
+                   <Button size="lg" variant={isInWishlist ? "secondary" : "outline"} className="mt-auto" onClick={handleWishlistToggle} disabled={wishlistLoading}>
+                       <Heart className={cn("mr-2 h-5 w-5", isInWishlist && "fill-destructive text-destructive")} />
+                       {isInWishlist ? "Saved" : "Save"}
+                   </Button>
+              </div>
 
-              <Button asChild size="lg" className="w-full md:w-auto mt-auto">
-                <a href={recipe.source_url} target="_blank" rel="noopener noreferrer">
-                  Cooking Instructions
-                  <ExternalLink className="ml-2 h-5 w-5" />
-                </a>
-              </Button>
             </CardContent>
           </div>
         </div>

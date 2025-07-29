@@ -3,25 +3,39 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot, doc, deleteDoc, CollectionReference } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Trash2, BookUser } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface UserRecipe {
     id: string;
     title: string;
-    // Add other recipe fields you might want to display on the card
+    imageUrl?: string;
 }
 
 export default function ProfilePage() {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const { toast } = useToast();
     const [recipes, setRecipes] = useState<UserRecipe[]>([]);
     const [recipesLoading, setRecipesLoading] = useState(true);
 
@@ -32,25 +46,40 @@ export default function ProfilePage() {
     }, [user, loading, router]);
     
     useEffect(() => {
-        async function fetchUserRecipes() {
-            if (!user) return;
-            setRecipesLoading(true);
-            try {
-                const q = query(collection(db, "recipes"), where("userId", "==", user.uid));
-                const querySnapshot = await getDocs(q);
-                const userRecipes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserRecipe));
-                setRecipes(userRecipes);
-            } catch (error) {
-                console.error("Error fetching user recipes: ", error);
-            } finally {
-                setRecipesLoading(false);
-            }
-        }
+        if (!user) return;
+        
+        setRecipesLoading(true);
+        const q = query(collection(db, "recipes") as CollectionReference<UserRecipe>, where("userId", "==", user.uid));
+        
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const userRecipes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setRecipes(userRecipes);
+            setRecipesLoading(false);
+        }, (error) => {
+            console.error("Error fetching user recipes: ", error);
+            toast({ title: "Error", description: "Could not fetch your recipes.", variant: "destructive" });
+            setRecipesLoading(false);
+        });
 
-        if (user) {
-            fetchUserRecipes();
+        return () => unsubscribe();
+    }, [user, toast]);
+
+    const handleDelete = async (recipeId: string) => {
+        try {
+            await deleteDoc(doc(db, "recipes", recipeId));
+            toast({
+                title: "Recipe deleted",
+                description: "Your recipe has been successfully deleted.",
+            })
+        } catch (error) {
+            console.error("Error deleting recipe:", error);
+            toast({
+                title: "Error",
+                description: "There was a problem deleting your recipe. Please try again.",
+                variant: "destructive",
+            });
         }
-    }, [user]);
+    }
 
     if (loading || !user) {
         return (
@@ -97,20 +126,52 @@ export default function ProfilePage() {
                     </div>
                     {recipesLoading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
+                            {Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
                         </div>
                     ) : recipes.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {recipes.map(recipe => (
-                                <Card key={recipe.id}>
-                                    <CardHeader>
+                                <Card key={recipe.id} className="flex flex-col">
+                                    {recipe.imageUrl && (
+                                         <div className="relative w-full h-32">
+                                            <Image src={recipe.imageUrl} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-t-lg" data-ai-hint="recipe food" />
+                                         </div>
+                                    )}
+                                    <CardHeader className="flex-grow">
                                         <CardTitle className="text-lg">{recipe.title}</CardTitle>
                                     </CardHeader>
+                                    <CardFooter className="p-2 border-t">
+                                         <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10">
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Delete
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone. This will permanently delete your recipe.
+                                                </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={() => handleDelete(recipe.id)}
+                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                                    Delete
+                                                </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </CardFooter>
                                 </Card>
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-10 border-dashed border-2 rounded-lg">
+                        <div className="text-center py-10 border-dashed border-2 rounded-lg flex flex-col items-center">
+                            <BookUser className="h-12 w-12 text-muted-foreground mb-4" />
                             <p className="text-muted-foreground">You haven't created any recipes yet.</p>
                             <Button variant="link" asChild className="mt-2">
                                 <Link href="/recipes/new">Create one now</Link>
