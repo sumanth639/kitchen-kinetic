@@ -10,7 +10,7 @@ import * as z from 'zod';
 import { type RecipeListItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Loader2, Search, Soup, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,16 +33,16 @@ function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <Card className="bg-card text-card-foreground shadow-sm overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg aspect-square">
+    <Card className="bg-card text-card-foreground shadow-sm overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col border rounded-lg">
       <Link href={`/recipes/${recipe.id}`} className="contents">
-        <div className="relative w-full h-2/3">
+        <div className="relative w-full h-48">
           <Image
             src={recipe.image_url}
             alt={recipe.title}
             fill
             style={{ objectFit: 'cover' }}
             className={cn(
-              'transition-transform duration-300 group-hover:scale-105',
+              'transition-transform duration-500 ease-in-out group-hover:scale-110',
               isLoading ? 'opacity-0' : 'opacity-100'
             )}
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
@@ -51,17 +51,29 @@ function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
           />
           {isLoading && <Skeleton className="absolute inset-0" />}
         </div>
-        <div className="p-3 flex flex-col justify-center flex-grow">
-          <CardTitle className="text-sm font-semibold leading-snug">
+        <CardContent className="p-4 flex flex-col justify-between flex-grow">
+          <h3 className="text-base font-semibold leading-snug mb-2 group-hover:text-primary transition-colors duration-300">
             {recipe.title}
-          </CardTitle>
-          <p className="text-xs text-muted-foreground truncate pt-1">
+          </h3>
+          <p className="text-sm text-muted-foreground truncate pt-1">
             {recipe.publisher}
           </p>
-        </div>
+        </CardContent>
       </Link>
     </Card>
   );
+}
+
+function RecipeSkeletonCard() {
+    return (
+        <Card className="overflow-hidden group flex flex-col border rounded-lg">
+            <Skeleton className="w-full h-48" />
+            <div className="p-4 flex flex-col justify-between flex-grow">
+                <Skeleton className="h-5 w-3/4 mb-3" />
+                <Skeleton className="h-4 w-1/2" />
+            </div>
+        </Card>
+    );
 }
 
 export default function Home() {
@@ -144,6 +156,7 @@ export default function Home() {
     const params = new URLSearchParams(searchParams);
     params.set('page', newPage.toString());
     router.push(`/?${params.toString()}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNextPage = () => {
@@ -160,10 +173,10 @@ export default function Home() {
 
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 md:py-12">
       <section className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">Kitchen Kinetic</h1>
-        <p className="text-lg md:text-xl text-muted-foreground">Discover your next favorite meal.</p>
+        <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2 tracking-tight">Kitchen Kinetic</h1>
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">The ultimate destination to discover, create, and share your favorite recipes.</p>
       </section>
 
       <div className="max-w-2xl mx-auto mb-12">
@@ -176,19 +189,19 @@ export default function Home() {
                 <FormItem className="flex-grow">
                   <FormControl>
                     <div className="relative">
-                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                       <Input placeholder="Search for pizza, pasta, salad..." className="pl-10" {...field} />
+                       <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                       <Input placeholder="Search for pizza, pasta, salad..." className="pl-12" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" size="lg" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Searching...
+                  Searching
                 </>
               ) : (
                 'Search'
@@ -198,26 +211,20 @@ export default function Home() {
         </Form>
       </div>
 
-      <div>
+      <div className="min-h-[400px]">
         {loading && (
-           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
              {Array.from({ length: RECIPES_PER_PAGE }).map((_, index) => (
-                <Card key={index} className="overflow-hidden group flex flex-col border rounded-lg aspect-square">
-                    <Skeleton className="w-full h-2/3" />
-                    <div className="p-3 flex flex-col justify-center flex-grow">
-                      <Skeleton className="h-4 w-3/4 mb-2" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                </Card>
+                <RecipeSkeletonCard key={index} />
               ))}
            </div>
         )}
-        {error && <p className="text-center text-destructive">{error}</p>}
+        {error && <p className="text-center text-destructive py-10">{error}</p>}
         {!loading && !error && (
           <>
             {recipes.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                   {paginatedRecipes.map((recipe) => (
                     <RecipeCard key={recipe.id} recipe={recipe} />
                   ))}
@@ -233,7 +240,7 @@ export default function Home() {
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-medium text-muted-foreground">
                       Page {currentPage} of {totalPages}
                     </span>
                     <Button
@@ -250,16 +257,18 @@ export default function Home() {
               </>
             ) : (
               searched && (
-                <div className="text-center py-10">
-                   <Soup className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground text-lg">No recipes found. Try searching for something else!</p>
+                <div className="text-center py-16">
+                   <Soup className="mx-auto h-16 w-16 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No Recipes Found</h3>
+                  <p className="text-muted-foreground">We couldn't find any recipes matching your search. Try a different keyword!</p>
                 </div>
               )
             )}
              {!searched && !loading && (
-                <div className="text-center py-10">
-                   <Soup className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground text-lg">Find delicious recipes from all over the world.</p>
+                <div className="text-center py-16">
+                   <Soup className="mx-auto h-16 w-16 text-muted-foreground/50 mb-4" />
+                   <h3 className="text-xl font-semibold mb-2">Find Your Next Meal</h3>
+                  <p className="text-muted-foreground">Search for your favorite dishes to get started.</p>
                 </div>
              )}
           </>
