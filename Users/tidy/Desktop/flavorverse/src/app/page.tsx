@@ -183,7 +183,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col">
-       <section className="relative w-full py-20 md:py-32 bg-cover bg-center bg-no-repeat">
+       <section className="relative w-full py-20 md:py-32 bg-cover bg-center bg-no-repeat -mt-14">
           <div className="absolute inset-0 bg-black/60" />
            <Image
                 src="/hero.jpg"

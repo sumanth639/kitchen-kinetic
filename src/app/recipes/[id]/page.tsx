@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,7 +14,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-
 
 const API_KEY = process.env.NEXT_PUBLIC_FORKIFY_API_KEY;
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
@@ -38,21 +36,21 @@ function RecipeImage({ src, alt }: { src: string; alt: string }) {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="relative w-full h-64 md:h-full">
+    <div className="relative w-full h-64 sm:h-80 lg:h-96">
       <Image
         src={src}
         alt={alt}
         fill
         style={{ objectFit: 'cover' }}
         className={cn(
-          'transition-opacity duration-300 rounded-t-lg md:rounded-l-lg md:rounded-t-none',
+          'transition-opacity duration-300 rounded-lg',
           isLoading ? 'opacity-0' : 'opacity-100'
         )}
-        sizes="(max-width: 768px) 100vw, 50vw"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
         onLoad={() => setIsLoading(false)}
         data-ai-hint="recipe food"
       />
-      {isLoading && <Skeleton className="absolute inset-0 rounded-t-lg md:rounded-l-lg md:rounded-t-none" />}
+      {isLoading && <Skeleton className="absolute inset-0 rounded-lg" />}
     </div>
   );
 }
@@ -67,7 +65,6 @@ export default function RecipeDetailsPage() {
   const [originalIngredients, setOriginalIngredients] = useState<Ingredient[]>([]);
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
-
 
   const id = typeof params.id === 'string' ? params.id : '';
 
@@ -125,7 +122,6 @@ export default function RecipeDetailsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [servings, originalIngredients]);
 
-
   const handleServingsChange = (change: number) => {
     setServings(prev => Math.max(1, prev + change));
   };
@@ -161,40 +157,52 @@ export default function RecipeDetailsPage() {
     }
   };
 
-
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <Card className="overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-2">
-            <div className="aspect-square md:aspect-auto">
-              <Skeleton className="w-full h-full min-h-[300px]" />
-            </div>
-            <div className="p-6 md:p-8">
-              <Skeleton className="h-8 w-3/4 mb-2" />
-              <Skeleton className="h-6 w-1/2 mb-6" />
-              <div className="flex flex-wrap gap-4 mb-6">
-                <Skeleton className="h-6 w-24" />
-                <Skeleton className="h-6 w-24" />
-              </div>
-              <Separator className="my-6" />
-              <h3 className="text-2xl font-semibold mb-4">Ingredients</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <Skeleton className="h-5 w-5 rounded-full mt-1 shrink-0" />
-                    <Skeleton className="h-5 w-full" />
-                  </div>
-                ))}
-              </div>
-               <Separator className="my-6" />
-               <div className="flex gap-4">
-                    <Skeleton className="h-12 w-full md:w-48" />
-                    <Skeleton className="h-12 w-12 rounded-full" />
-               </div>
+      <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
+        {/* Hero Section Skeleton */}
+        <div className="mb-8">
+          <Skeleton className="w-full h-64 sm:h-80 lg:h-96 rounded-lg mb-6" />
+          <div className="max-w-4xl mx-auto text-center space-y-4">
+            <Skeleton className="h-10 w-3/4 mx-auto" />
+            <Skeleton className="h-6 w-1/2 mx-auto" />
+            <div className="flex justify-center gap-6">
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-6 w-24" />
             </div>
           </div>
-        </Card>
+        </div>
+
+        {/* Content Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-8 w-48" />
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <Skeleton className="h-5 w-5 rounded-full mt-1 shrink-0" />
+                      <Skeleton className="h-5 w-full" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div>
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -204,51 +212,57 @@ export default function RecipeDetailsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <Card className="overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2">
-          <div className="relative">
-            <RecipeImage src={recipe.image_url} alt={recipe.title} />
+    <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
+      {/* Hero Section */}
+      <div className="mb-8 lg:mb-12">
+        <RecipeImage src={recipe.image_url} alt={recipe.title} />
+        
+        <div className="max-w-4xl mx-auto text-center mt-6 lg:mt-8">
+          <CardTitle className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary leading-tight mb-4">
+            {recipe.title}
+          </CardTitle>
+          <CardDescription className="flex items-center justify-center gap-2 text-lg mb-6">
+            <ChefHat className="h-6 w-6 text-muted-foreground"/> 
+            <span>By {recipe.publisher}</span>
+          </CardDescription>
+          
+          {/* Recipe Stats */}
+          <div className="flex flex-wrap justify-center gap-6 lg:gap-8 text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Clock className="h-6 w-6"/>
+              <span className="text-lg">{recipe.cooking_time} minutes</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="h-6 w-6"/>
+              <span className="text-lg">Serves {servings}</span>
+            </div>
+            <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-2 rounded-lg">
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" onClick={() => handleServingsChange(-1)} disabled={servings <= 1}>
+                <Minus className="h-5 w-5" />
+              </Button>
+              <span className="font-bold text-primary text-lg w-6 text-center">{servings}</span>
+               <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" onClick={() => handleServingsChange(1)}>
+                <Plus className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
-          <div className="flex flex-col p-4 sm:p-6 md:p-8">
-            <CardHeader className="p-0 pb-4">
-              <CardTitle className="text-2xl sm:text-3xl font-bold text-primary leading-tight">
-                {recipe.title}
-              </CardTitle>
-              <CardDescription className="flex items-center gap-2 pt-2 text-base">
-                 <ChefHat className="h-5 w-5 text-muted-foreground"/> 
-                 <span>By {recipe.publisher}</span>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow p-0 flex flex-col">
-              <div className="flex flex-wrap gap-x-6 gap-y-4 mb-6 text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                      <Clock className="h-5 w-5"/>
-                      <span>{recipe.cooking_time} minutes</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5"/>
-                      <span>Serves {servings}</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 p-1 rounded-md">
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:text-primary" onClick={() => handleServingsChange(-1)} disabled={servings <= 1}>
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span className="font-bold text-primary w-4 text-center">{servings}</span>
-                     <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:text-primary" onClick={() => handleServingsChange(1)}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-              </div>
-              
-              <Separator className="my-6" />
+        </div>
+      </div>
 
-              <h3 className="text-2xl font-semibold mb-4">Ingredients</h3>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+      {/* Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content - Ingredients */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl lg:text-3xl">Ingredients</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                 {recipe.ingredients.map((ing, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-1 shrink-0" />
-                    <span className="text-sm">
+                    <CheckCircle2 className="h-6 w-6 text-primary mt-1 shrink-0" />
+                    <span className="text-base leading-relaxed">
                       {ing.quantity ? `${ing.quantity} ` : ''}
                       {ing.unit && `${ing.unit} `}
                       {ing.description}
@@ -256,28 +270,58 @@ export default function RecipeDetailsPage() {
                   </li>
                 ))}
               </ul>
-              
-              <div className="flex-grow"></div>
-              
-              <Separator className="my-6" />
-              
-              <div className="flex flex-col sm:flex-row gap-4 items-center">
-                  <Button asChild size="lg" className="w-full sm:w-auto mt-auto">
-                    <a href={recipe.source_url} target="_blank" rel="noopener noreferrer">
-                      Cooking Instructions
-                      <ExternalLink className="ml-2 h-5 w-5" />
-                    </a>
-                  </Button>
-                   <Button size="lg" variant={isInWishlist ? "secondary" : "outline"} className="w-full sm:w-auto mt-auto" onClick={handleWishlistToggle} disabled={wishlistLoading}>
-                       <Heart className={cn("mr-2 h-5 w-5", isInWishlist && "fill-destructive text-destructive")} />
-                       {isInWishlist ? "Saved" : "Save"}
-                   </Button>
-              </div>
-
             </CardContent>
-          </div>
+          </Card>
         </div>
-      </Card>
+
+        {/* Sidebar - Actions */}
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <Button asChild size="lg" className="w-full text-lg h-14">
+                  <a href={recipe.source_url} target="_blank" rel="noopener noreferrer">
+                    View Full Recipe
+                    <ExternalLink className="ml-2 h-6 w-6" />
+                  </a>
+                </Button>
+                
+                <Button 
+                  size="lg" 
+                  variant={isInWishlist ? "secondary" : "outline"} 
+                  className="w-full text-lg h-14" 
+                  onClick={handleWishlistToggle} 
+                  disabled={wishlistLoading}
+                >
+                  <Heart className={cn("mr-2 h-6 w-6", isInWishlist && "fill-destructive text-destructive")} />
+                  {isInWishlist ? "Saved to Wishlist" : "Save to Wishlist"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recipe Info Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Recipe Info</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">Prep + Cook Time</span>
+                <span className="font-medium">{recipe.cooking_time} min</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">Servings</span>
+                <span className="font-medium">{recipe.servings} people</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-muted-foreground">Publisher</span>
+                <span className="font-medium text-right">{recipe.publisher}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
