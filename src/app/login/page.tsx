@@ -29,6 +29,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
   const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
@@ -40,15 +41,13 @@ export default function LoginPage() {
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
-        setGoogleLoading(true);
         const result = await getRedirectResult(auth);
         if (result) {
-          // User signed in. The useAuth hook will handle the redirect.
+          // This will trigger the useAuth hook to update and the above useEffect will redirect.
           toast({
             title: 'Signed in successfully',
             description: `Welcome back, ${result.user.email}!`,
           });
-          router.push('/');
         }
       } catch (error: any) {
         toast({
@@ -57,7 +56,7 @@ export default function LoginPage() {
           variant: 'destructive',
         });
       } finally {
-        setGoogleLoading(false);
+        setIsCheckingRedirect(false);
       }
     };
     handleRedirectResult();
@@ -76,7 +75,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
-      router.push('/');
+      // The useAuth hook will detect the change and the useEffect will redirect.
     } catch (error: any) {
       toast({
         title: 'Error logging in',
@@ -92,6 +91,7 @@ export default function LoginPage() {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
+    // This will redirect the user, and the result will be handled by getRedirectResult on page load.
     await signInWithRedirect(auth, provider).catch((error) => {
        toast({
           title: 'Google Sign-In Error',
@@ -102,7 +102,7 @@ export default function LoginPage() {
     });
   };
 
-  if (authLoading || user) {
+  if (authLoading || isCheckingRedirect || user) {
      return (
        <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />

@@ -29,6 +29,7 @@ export default function SignupPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
   const { user, loading: authLoading } = useAuth();
   
   useEffect(() => {
@@ -40,14 +41,13 @@ export default function SignupPage() {
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
-        setGoogleLoading(true);
         const result = await getRedirectResult(auth);
         if (result) {
           toast({
             title: 'Account created successfully',
             description: `Welcome, ${result.user.email}!`,
           });
-          router.push('/');
+          // This will trigger the useAuth hook to update and the above useEffect will redirect.
         }
       } catch (error: any) {
         toast({
@@ -56,7 +56,7 @@ export default function SignupPage() {
           variant: 'destructive',
         });
       } finally {
-        setGoogleLoading(false);
+        setIsCheckingRedirect(false);
       }
     };
     handleRedirectResult();
@@ -75,7 +75,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, data.email, data.password);
-      router.push('/');
+      // The useAuth hook will detect the change and the useEffect will redirect.
     } catch (error: any) {
       toast({
         title: 'Error creating account',
@@ -101,7 +101,7 @@ export default function SignupPage() {
     });
   };
 
-  if (authLoading || user) {
+  if (authLoading || isCheckingRedirect || user) {
      return (
        <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
