@@ -30,14 +30,13 @@ export default function SignupPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   
   useEffect(() => {
-    if (!authLoading && user) {
+    if (user) {
       router.push('/');
     }
-  }, [user, authLoading, router]);
-
+  }, [user, router]);
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupFormSchema),
@@ -51,7 +50,10 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, data.email, data.password);
-      // The useAuth hook will detect the change and the useEffect will redirect.
+      toast({
+        title: 'Account created successfully',
+        description: 'Welcome to Kitchen Kinetic!',
+      });
     } catch (error: any) {
       toast({
         title: 'Error creating account',
@@ -67,7 +69,6 @@ export default function SignupPage() {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     
-    // Add custom parameters to reduce CORS issues
     provider.setCustomParameters({
       prompt: 'select_account'
     });
@@ -79,7 +80,6 @@ export default function SignupPage() {
         description: `Welcome, ${result.user.displayName || result.user.email}!`,
       });
     } catch (error: any) {
-      // Handle specific error cases
       if (error.code === 'auth/popup-closed-by-user') {
         toast({
           title: 'Sign-up cancelled',
@@ -104,56 +104,98 @@ export default function SignupPage() {
     }
   };
 
-  if (authLoading || user) {
-     return (
-       <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-     )
-  }
-
   return (
-    <div className="container flex min-h-[calc(100vh-8rem)] items-center justify-center py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Sign Up</CardTitle>
-          <CardDescription>Create an account to save and create recipes.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" {...form.register('email')} />
-              {form.formState.errors.email && <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" {...form.register('password')} />
-               {form.formState.errors.password && <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>}
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" /> : 'Create Account'}
-            </Button>
-          </form>
-           <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
-          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={googleLoading}>
-             {googleLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon className="mr-2 h-4 w-4" /> Google</>}
-          </Button>
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link href="/login" className="font-medium text-primary hover:underline">
-              Login
+    <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+      <div className="w-full max-w-md px-4">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-extrabold text-white mb-2">
+            Create your account
+          </h2>
+          <p className="text-sm text-gray-300">
+            Or{' '}
+            <Link href="/login" className="font-medium text-orange-400 hover:text-orange-300">
+              sign in to your existing account
             </Link>
           </p>
-        </CardContent>
-      </Card>
+        </div>
+        <Card className="shadow-xl">
+          <CardHeader>
+            <CardTitle>Sign Up</CardTitle>
+            <CardDescription>Create an account to save and create recipes.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="Enter your email" 
+                  {...form.register('email')} 
+                />
+                {form.formState.errors.email && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.email.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  placeholder="Enter your password"
+                  {...form.register('password')} 
+                />
+                {form.formState.errors.password && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.password.message}
+                  </p>
+                )}
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  'Create Account'
+                )}
+              </Button>
+            </form>
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={handleGoogleSignIn} 
+              disabled={googleLoading}
+            >
+              {googleLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <GoogleIcon className="mr-2 h-4 w-4" />
+              )}
+              {googleLoading ? 'Creating account...' : 'Sign up with Google'}
+            </Button>
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <Link href="/login" className="font-medium text-primary hover:underline">
+                Sign in
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

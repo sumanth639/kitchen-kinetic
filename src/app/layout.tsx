@@ -3,6 +3,7 @@ import './globals.css';
 import { Header } from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
+import { Footer } from '@/components/footer';
 
 export const metadata: Metadata = {
   title: 'Kitchen Kinetic',
@@ -17,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <head>
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
@@ -28,6 +30,7 @@ export default function RootLayout({
             <main className="flex-1 mt-14">
               {children}
             </main>
+            <Footer />
           </div>
           <Toaster />
         </AuthProvider>

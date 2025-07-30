@@ -36,11 +36,11 @@ export function Header() {
       <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
-          className="flex items-center gap-3 group"
+          className="flex items-center gap-3 group "
           aria-label="Kitchen Kinetic Home"
         >
-          <div className="p-1.5 rounded-lg bg-primary/10 group-hover:bg-primary/15 transition-colors">
-            <ChefHat className="h-5 w-5 text-primary" />
+          <div className="p-1.5 ">
+            <img src="/logo.png" alt="Kitchen Kinetic Logo" className="h-16 w-16 object-contain" />
           </div>
           <span className="font-semibold text-xl tracking-tight hidden sm:inline-block">
             Kitchen Kinetic

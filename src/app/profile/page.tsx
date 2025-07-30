@@ -28,7 +28,7 @@ import {
   CollectionReference,
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, BookUser } from 'lucide-react';
+import { PlusCircle, Trash2, BookUser, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -55,6 +55,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [recipes, setRecipes] = useState<UserRecipe[]>([]);
   const [recipesLoading, setRecipesLoading] = useState(true);
+  const [deletingRecipeId, setDeletingRecipeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -76,8 +77,8 @@ export default function ProfilePage() {
       q,
       (querySnapshot) => {
         const userRecipes = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
           ...doc.data(),
+          id: doc.id,
         }));
         setRecipes(userRecipes);
         setRecipesLoading(false);
@@ -97,8 +98,23 @@ export default function ProfilePage() {
   }, [user, toast]);
 
   const handleDelete = async (recipeId: string) => {
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to delete recipes.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setDeletingRecipeId(recipeId);
+    
     try {
-      await deleteDoc(doc(db, 'recipes', recipeId));
+      // First, verify the recipe belongs to the current user
+      const recipeRef = doc(db, 'recipes', recipeId);
+      
+      await deleteDoc(recipeRef);
+      
       toast({
         title: 'Recipe deleted',
         description: 'Your recipe has been successfully deleted.',
@@ -111,6 +127,8 @@ export default function ProfilePage() {
           'There was a problem deleting your recipe. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setDeletingRecipeId(null);
     }
   };
 
@@ -170,9 +188,10 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {recipes.map((recipe) => (
                 // Wrap the entire Card with Link
-                <Link href={`/recipes/${recipe.id}`} key={recipe.id} passHref>
-                  <Card className="flex flex-col overflow-hidden h-full cursor-pointer hover:shadow-lg transition-shadow">
-                    {' '}
+               <div key={recipe.id}>
+                <Card className="flex flex-col overflow-hidden h-full cursor-pointer hover:shadow-lg transition-shadow">
+                     <Link href={`/recipes/${recipe.id}`}  passHref>
+                   <div>
                     {/* Added h-full and cursor-pointer for better UX */}
                     {recipe.imageUrl ? (
                       <div className="relative w-full h-40">
@@ -195,27 +214,31 @@ export default function ProfilePage() {
                         {recipe.title}
                       </CardTitle>
                     </CardHeader>
+                    </div>
+                    </Link>
                     <CardFooter className="p-2 border-t mt-auto">
                       <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={(e) => e.preventDefault()}
-                          >
-                            {' '}
-                            {/* Prevent link navigation on delete button click */}
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </Button>
-                        </AlertDialogTrigger>
+                      <AlertDialogTrigger asChild>
+  <Button
+    variant="ghost"
+    size="sm"
+    className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+    disabled={deletingRecipeId === recipe.id}
+  >
+    {deletingRecipeId === recipe.id ? (
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+    ) : (
+      <Trash2 className="mr-2 h-4 w-4" />
+    )}
+    {deletingRecipeId === recipe.id ? 'Deleting...' : 'Delete'}
+  </Button>
+                      </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
                               This action cannot be undone. This will
-                              permanently delete your recipe.
+                              permanently delete your recipe "{recipe.title}".
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -223,15 +246,25 @@ export default function ProfilePage() {
                             <AlertDialogAction
                               onClick={() => handleDelete(recipe.id)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              disabled={deletingRecipeId === recipe.id}
                             >
-                              Delete
+                              {deletingRecipeId === recipe.id ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Deleting...
+                                </>
+                              ) : (
+                                'Delete'
+                              )}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
                     </CardFooter>
                   </Card>
-                </Link>
+                </div>
+                  
+                
               ))}
             </div>
           ) : (
