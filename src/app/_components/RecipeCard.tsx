@@ -38,8 +38,6 @@ export function RecipeCard({ recipe, isFeatured = false }: RecipeCardProps & { i
 
         {isLoading && <Skeleton className="absolute inset-0 bg-muted/20" />}
 
-     
-
         {/* Recipe Type Badge */}
         <div className="absolute top-2 right-2 bg-black/30 backdrop-blur-sm rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <ChefHat className="w-3 h-3 text-white" />
@@ -84,15 +82,9 @@ export function RecipeCard({ recipe, isFeatured = false }: RecipeCardProps & { i
     // Outer div with relative + paddingBottom trick for square aspect ratio
     <div className="w-full relative" style={{ paddingBottom: '100%' }}>
       <Card className="group absolute inset-0 overflow-hidden border border-border/40 bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-1 hover:border-primary/20 dark:bg-card/80 dark:hover:shadow-primary/10 w-full h-full">
-        {isFeatured ? (
-          <div className="contents">
-            {cardContent}
-          </div>
-        ) : (
-          <Link href={`/recipes/${recipe.id}`} className="block h-full">
-            {cardContent}
-          </Link>
-        )}
+        <Link href={`/recipes/${recipe.id}`} className="block h-full"> {/* Always wrap with Link */}
+          {cardContent}
+        </Link>
       </Card>
     </div>
   );
