@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,20 +6,32 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { signInWithEmailAndPassword, signInWithRedirect, GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+} from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/components/auth-provider';
 import { GoogleIcon } from '@/components/icons/google-icon';
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  password: z
+    .string()
+    .min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -30,40 +41,14 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
   const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     if (!authLoading && user) {
-      router.push('/');
+      console.log('User found, redirecting to home');
+      router.replace('/');
     }
   }, [user, authLoading, router]);
-
-  useEffect(() => {
-    const handleRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          // This will trigger the useAuth hook to update and the above useEffect will redirect.
-          toast({
-            title: 'Signed in successfully',
-            description: `Welcome back, ${result.user.email}!`,
-          });
-          router.push('/');
-        }
-      } catch (error: any) {
-        toast({
-          title: 'Google Sign-In Error',
-          description: error.message,
-          variant: 'destructive',
-        });
-      } finally {
-        setIsCheckingRedirect(false);
-      }
-    };
-    handleRedirectResult();
-  }, [router, toast]);
-
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -92,23 +77,52 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
-    // This will redirect the user, and the result will be handled by getRedirectResult on page load.
-    await signInWithRedirect(auth, provider).catch((error) => {
-       toast({
+    
+    // Add custom parameters to reduce CORS issues
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    
+    try {
+      const result = await signInWithPopup(auth, provider);
+      // On successful sign-in, the onAuthStateChanged listener in AuthProvider
+      // will handle the user state and the redirect will be triggered by the useEffect.
+      toast({
+        title: 'Signed in successfully',
+        description: `Welcome back, ${result.user.displayName || result.user.email}!`,
+      });
+    } catch (error: any) {
+      // Handle specific error cases
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast({
+          title: 'Sign-in cancelled',
+          description: 'You closed the popup before completing sign-in.',
+          variant: 'destructive',
+        });
+      } else if (error.code === 'auth/popup-blocked') {
+        toast({
+          title: 'Popup blocked',
+          description: 'Please allow popups for this site and try again.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
           title: 'Google Sign-In Error',
           description: error.message,
           variant: 'destructive',
         });
-        setGoogleLoading(false);
-    });
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
-  if (authLoading || isCheckingRedirect || user) {
-     return (
-       <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
+  if (authLoading || user) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
       </div>
-     )
+    );
   }
 
   return (
@@ -116,19 +130,38 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your credentials to access your account.</CardDescription>
+          <CardDescription>
+            Enter your credentials to access your account.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" {...form.register('email')} />
-              {form.formState.errors.email && <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>}
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                {...form.register('email')}
+              />
+              {form.formState.errors.email && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.email.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" {...form.register('password')} />
-              {form.formState.errors.password && <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>}
+              <Input
+                id="password"
+                type="password"
+                {...form.register('password')}
+              />
+              {form.formState.errors.password && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.password.message}
+                </p>
+              )}
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? <Loader2 className="animate-spin" /> : 'Login'}
@@ -139,15 +172,31 @@ export default function LoginPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
             </div>
           </div>
-          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={googleLoading}>
-            {googleLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon className="mr-2 h-4 w-4" /> Google</>}
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading}
+          >
+            {googleLoading ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <>
+                <GoogleIcon className="mr-2 h-4 w-4" /> Google
+              </>
+            )}
           </Button>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Don't have an account?{' '}
-            <Link href="/signup" className="font-medium text-primary hover:underline">
+            <Link
+              href="/signup"
+              className="font-medium text-primary hover:underline"
+            >
               Sign up
             </Link>
           </p>

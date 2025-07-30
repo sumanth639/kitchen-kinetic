@@ -1,23 +1,29 @@
-export interface RecipeListItem {
+// types.ts
+export type RecipeListItem = {
   id: string;
   title: string;
-  publisher: string;
   image_url: string;
-}
+  publisher: string;
+  customRecipe?: boolean; // Add this
+};
 
-export interface Ingredient {
-  quantity: number | null;
-  unit: string;
-  description:string;
-}
-
-export interface Recipe {
+// And ensure your Recipe type also aligns with what RecipeDetailsPage expects
+export type Recipe = {
   id: string;
   title: string;
-  publisher: string;
-  source_url: string;
   image_url: string;
-  servings: number;
+  publisher: string;
   cooking_time: number;
+  servings: number;
+  source_url: string;
   ingredients: Ingredient[];
-}
+  // If your custom recipes also have these fields, make sure they match
+  // You might need to add optional properties if they differ from Forkify API
+  userId?: string; // Add if you store the user ID on custom recipes
+};
+
+export type Ingredient = {
+  quantity: number | null;
+  unit: string | null;
+  description: string;
+};

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { createUserWithEmailAndPassword, signInWithRedirect, GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/components/auth-provider';
 import { GoogleIcon } from '@/components/icons/google-icon';
 
 const signupFormSchema = z.object({
@@ -30,7 +30,6 @@ export default function SignupPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
   const { user, loading: authLoading } = useAuth();
   
   useEffect(() => {
@@ -38,30 +37,6 @@ export default function SignupPage() {
       router.push('/');
     }
   }, [user, authLoading, router]);
-
-  useEffect(() => {
-    const handleRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          toast({
-            title: 'Account created successfully',
-            description: `Welcome, ${result.user.email}!`,
-          });
-          router.push('/');
-        }
-      } catch (error: any) {
-        toast({
-          title: 'Google Sign-Up Error',
-          description: error.message,
-          variant: 'destructive',
-        });
-      } finally {
-        setIsCheckingRedirect(false);
-      }
-    };
-    handleRedirectResult();
-  }, [router, toast]);
 
 
   const form = useForm<SignupFormValues>({
@@ -91,17 +66,45 @@ export default function SignupPage() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider).catch((error) => {
-       toast({
+    
+    // Add custom parameters to reduce CORS issues
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    
+    try {
+      const result = await signInWithPopup(auth, provider);
+      toast({
+        title: 'Account created successfully',
+        description: `Welcome, ${result.user.displayName || result.user.email}!`,
+      });
+    } catch (error: any) {
+      // Handle specific error cases
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast({
+          title: 'Sign-up cancelled',
+          description: 'You closed the popup before completing sign-up.',
+          variant: 'destructive',
+        });
+      } else if (error.code === 'auth/popup-blocked') {
+        toast({
+          title: 'Popup blocked',
+          description: 'Please allow popups for this site and try again.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
           title: 'Google Sign-Up Error',
           description: error.message,
           variant: 'destructive',
         });
-        setGoogleLoading(false);
-    });
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
-  if (authLoading || isCheckingRedirect || user) {
+  if (authLoading || user) {
      return (
        <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />

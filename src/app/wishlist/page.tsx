@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -15,15 +15,7 @@ import {
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { db } from '@/lib/firebase';
-import {
-  collection,
-  onSnapshot,
-  query,
-  orderBy,
-  doc,
-  deleteDoc,
-  CollectionReference,
-} from 'firebase/firestore';
+import { removeFromWishlist, subscribeToWishlist } from '@/lib/firestore-utils';
 import { Button } from '@/components/ui/button';
 import { Heart, Soup, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -106,28 +98,16 @@ export default function WishlistPage() {
     if (!user) return;
 
     setWishlistLoading(true);
-    const wishlistRef = collection(
-      db,
-      'users',
+    const unsubscribe = subscribeToWishlist(
       user.uid,
-      'wishlist'
-    ) as CollectionReference<Omit<WishlistItem, 'id'>>;
-    const q = query(wishlistRef, orderBy('addedAt', 'desc'));
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const items = snapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as WishlistItem)
-        );
+      (items) => {
         setWishlist(items);
         setWishlistLoading(false);
       },
       (error) => {
-        console.error('Error fetching wishlist: ', error);
         toast({
           title: 'Error',
-          description: 'Could not fetch your wishlist.',
+          description: error.message,
           variant: 'destructive',
         });
         setWishlistLoading(false);
@@ -140,17 +120,15 @@ export default function WishlistPage() {
   const handleRemoveFromWishlist = async (recipeId: string) => {
     if (!user) return;
     try {
-      const wishlistItemRef = doc(db, 'users', user.uid, 'wishlist', recipeId);
-      await deleteDoc(wishlistItemRef);
+      await removeFromWishlist(user.uid, recipeId);
       toast({
         title: 'Removed from wishlist',
         description: 'The recipe has been removed from your wishlist.',
       });
-    } catch (error) {
-      console.error('Error removing from wishlist:', error);
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to remove recipe from wishlist.',
+        description: error.message,
         variant: 'destructive',
       });
     }

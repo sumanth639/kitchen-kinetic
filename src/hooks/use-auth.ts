@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -10,13 +9,22 @@ export function useAuth() {
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    // Check if there's already a user in the auth state
+    if (auth.currentUser) {
+      setUser(auth.currentUser);
       setInitializing(false);
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
+      setUser(user);
+      if (initializing) {
+        setInitializing(false);
+      }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [initializing]);
 
   return { user, loading: initializing };
 }

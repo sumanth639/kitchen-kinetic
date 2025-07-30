@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Header } from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/components/auth-provider';
 
 export const metadata: Metadata = {
   title: 'Kitchen Kinetic',
@@ -21,13 +22,15 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased min-h-screen bg-background text-foreground">
-        <div className="relative flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1 -mt-14">
-            {children}
-          </main>
-        </div>
-        <Toaster />
+        <AuthProvider>
+          <div className="relative flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1 mt-14">
+              {children}
+            </main>
+          </div>
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );
