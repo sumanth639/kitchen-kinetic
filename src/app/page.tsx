@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -11,14 +10,17 @@ import { type RecipeListItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from '@/components/ui/form';
 import { Loader2, Search, Soup, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
-
-
-
 
 const API_KEY = process.env.NEXT_PUBLIC_FORKIFY_API_KEY;
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
@@ -51,7 +53,7 @@ function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
             onLoad={() => setIsLoading(false)}
             data-ai-hint="recipe food"
           />
-           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           {isLoading && <Skeleton className="absolute inset-0" />}
         </div>
         <CardContent className="p-4 flex flex-col justify-between flex-grow">
@@ -68,15 +70,15 @@ function RecipeCard({ recipe }: { recipe: RecipeListItem }) {
 }
 
 function RecipeSkeletonCard() {
-    return (
-        <Card className="overflow-hidden group flex flex-col border rounded-lg">
-            <Skeleton className="w-full h-48" />
-            <div className="p-4 flex flex-col justify-between flex-grow">
-                <Skeleton className="h-5 w-3/4 mb-3" />
-                <Skeleton className="h-4 w-1/2" />
-            </div>
-        </Card>
-    );
+  return (
+    <Card className="overflow-hidden group flex flex-col border rounded-lg">
+      <Skeleton className="w-full h-48" />
+      <div className="p-4 flex flex-col justify-between flex-grow">
+        <Skeleton className="h-5 w-3/4 mb-3" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>
+    </Card>
+  );
 }
 
 export default function Home() {
@@ -86,11 +88,13 @@ export default function Home() {
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const page = searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : 1;
+
+  const page = searchParams.get('page')
+    ? parseInt(searchParams.get('page')!, 10)
+    : 1;
   const searchTerm = searchParams.get('q') || '';
   const [hasSearched, setHasSearched] = useState(!!searchTerm);
-  
+
   const [currentPage, setCurrentPage] = useState(page);
 
   const form = useForm<SearchFormValues>({
@@ -99,12 +103,12 @@ export default function Home() {
       searchTerm: searchTerm,
     },
   });
-  
+
   const fetchRecipes = useCallback(async (query: string) => {
     if (!query) {
-       setLoading(false);
-       return
-    };
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -123,44 +127,45 @@ export default function Home() {
         setRecipes(data.data.recipes);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setError(
+        err instanceof Error ? err.message : 'An unknown error occurred'
+      );
     } finally {
       setLoading(false);
     }
   }, []);
-  
+
   useEffect(() => {
     const query = searchParams.get('q');
-     if (query) {
+    if (query) {
       setHasSearched(true);
       form.setValue('searchTerm', query);
       fetchRecipes(query);
     } else {
-       // Fetch initial "featured" recipes if no search query
-       setHasSearched(false);
-       fetchRecipes('pasta');
+      // Fetch initial "featured" recipes if no search query
+      setHasSearched(false);
+      fetchRecipes('pasta');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, fetchRecipes]);
-  
+
   useEffect(() => {
-     setCurrentPage(page);
+    setCurrentPage(page);
   }, [page]);
 
-
   async function onSubmit(values: SearchFormValues) {
-     const params = new URLSearchParams();
-     params.set('q', values.searchTerm);
-     params.set('page', '1');
-     router.push(`/?${params.toString()}`);
+    const params = new URLSearchParams();
+    params.set('q', values.searchTerm);
+    params.set('page', '1');
+    router.push(`/?${params.toString()}`);
   }
-  
+
   const totalPages = Math.ceil(recipes.length / RECIPES_PER_PAGE);
   const paginatedRecipes = recipes.slice(
     (currentPage - 1) * RECIPES_PER_PAGE,
     currentPage * RECIPES_PER_PAGE
   );
-  
+
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
     const params = new URLSearchParams(searchParams);
@@ -171,7 +176,7 @@ export default function Home() {
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
-       handlePageChange(currentPage + 1);
+      handlePageChange(currentPage + 1);
     }
   };
 
@@ -181,128 +186,158 @@ export default function Home() {
     }
   };
 
-  const displayRecipes = hasSearched ? paginatedRecipes : recipes.slice(0, RECIPES_PER_PAGE);
+  const displayRecipes = hasSearched
+    ? paginatedRecipes
+    : recipes.slice(0, RECIPES_PER_PAGE);
 
   return (
     <div className="flex flex-col">
-       <section className="relative w-full py-20 md:py-32 bg-cover bg-center bg-no-repeat">
-          <div className="absolute inset-0 bg-black/20" />
-          <Image
-  src="/hero.jpg"
-  alt="Hero background"
-  fill
-  className="object-cover -z-10"
-  data-ai-hint="food cooking"
-/>
-          <div className="container mx-auto px-4 relative">
-             <div className="text-center">
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">Kitchen Kinetic</h1>
-                <p className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto">The ultimate destination to discover, create, and share your favorite recipes.</p>
-            </div>
-             <div className="max-w-2xl mx-auto mt-12">
-                <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
-                    <FormField
-                    control={form.control}
-                    name="searchTerm"
-                    render={({ field }) => (
-                        <FormItem className="flex-grow">
-                        <FormControl>
-                            <div className="relative">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                            <Input placeholder="Search for pizza, pasta, salad..." className="pl-12" {...field} />
-                            </div>
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <Button type="submit" size="lg" disabled={loading && hasSearched}>
-                    {loading && hasSearched ? (
-                        <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Searching
-                        </>
-                    ) : (
-                        'Search'
-                    )}
-                    </Button>
-                </form>
-                </Form>
-            </div>
+      <section className="relative w-full py-24 md:py-40 bg-cover bg-center bg-no-repeat">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
+        <Image
+          src="/hero.jpg"
+          alt="Hero background"
+          fill
+          className="object-cover -z-10"
+          data-ai-hint="food cooking"
+        />
+        <div className="container mx-auto px-4 relative">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 tracking-tight">
+              Kitchen <span className="text-primary ">Kinetic</span>
+            </h1>
+            <p className="text-lg md:text-xl italic lg:text-2xl text-white/90 max-w-3xl mx-auto mb-8 md:mb-12">
+              The ultimate destination to discover, create, and share your
+              favorite recipes.
+            </p>
           </div>
-       </section>
-      
-       <main className="container mx-auto px-4 py-8 md:py-12">
-          <div className="min-h-[400px]">
-             {!loading && !error && hasSearched && (
-                <div className="mb-8">
-                    <h2 className="text-2xl font-bold">Search Results</h2>
-                    <p className="text-muted-foreground">Found {recipes.length} recipes for "{searchTerm}"</p>
-                </div>
-            )}
-             {!loading && !error && !hasSearched && (
-                 <div className="mb-8">
-                    <h2 className="text-2xl font-bold">Featured Recipes</h2>
-                    <p className="text-muted-foreground">Get inspired with these popular dishes.</p>
-                </div>
-            )}
-            {loading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {Array.from({ length: RECIPES_PER_PAGE }).map((_, index) => (
-                    <RecipeSkeletonCard key={index} />
-                ))}
+          <div className="max-w-3xl mx-auto">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="flex flex-col sm:flex-row gap-3 md:gap-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="searchTerm"
+                  render={({ field }) => (
+                    <FormItem className="flex-grow">
+                      <FormControl>
+                        <div className="relative">
+                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-400 z-10" />
+                          <Input
+                            placeholder="Search for pizza, pasta, salad..."
+                            className="pl-14 h-14 md:h-16 text-base md:text-lg bg-gray-800/90 backdrop-blur-sm border border-gray-600/50 shadow-lg rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-white placeholder:text-gray-300"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={loading && hasSearched}
+                  className="h-14 md:h-16 px-8 md:px-12 text-base md:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-primary hover:bg-primary/90"
+                >
+                  {loading && hasSearched ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Searching
+                    </>
+                  ) : (
+                    'Search Recipes'
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </div>
+        </div>
+      </section>
+
+      <main className="container mx-auto px-4 py-8 md:py-12">
+        <div className="min-h-[400px]">
+          {!loading && !error && hasSearched && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold">Search Results</h2>
+              <p className="text-muted-foreground">
+                Found {recipes.length} recipes for "{searchTerm}"
+              </p>
             </div>
-            )}
-            {error && <p className="text-center text-destructive py-10">{error}</p>}
-            {!loading && !error && (
+          )}
+          {!loading && !error && !hasSearched && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold">Featured Recipes</h2>
+              <p className="text-muted-foreground">
+                Get inspired with these popular dishes.
+              </p>
+            </div>
+          )}
+          {loading && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {Array.from({ length: RECIPES_PER_PAGE }).map((_, index) => (
+                <RecipeSkeletonCard key={index} />
+              ))}
+            </div>
+          )}
+          {error && (
+            <p className="text-center text-destructive py-10">{error}</p>
+          )}
+          {!loading && !error && (
             <>
-                {recipes.length > 0 ? (
+              {recipes.length > 0 ? (
                 <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     {displayRecipes.map((recipe) => (
-                        <RecipeCard key={recipe.id} recipe={recipe} />
+                      <RecipeCard key={recipe.id} recipe={recipe} />
                     ))}
-                    </div>
-                    {hasSearched && totalPages > 1 && (
+                  </div>
+                  {hasSearched && totalPages > 1 && (
                     <div className="flex justify-center items-center gap-4 mt-12">
-                        <Button
+                      <Button
                         variant="outline"
                         size="icon"
                         onClick={handlePrevPage}
                         disabled={currentPage === 1}
                         aria-label="Previous page"
-                        >
+                      >
                         <ChevronLeft className="h-5 w-5" />
-                        </Button>
-                        <span className="text-sm font-medium text-muted-foreground">
+                      </Button>
+                      <span className="text-sm font-medium text-muted-foreground">
                         Page {currentPage} of {totalPages}
-                        </span>
-                        <Button
+                      </span>
+                      <Button
                         variant="outline"
                         size="icon"
                         onClick={handleNextPage}
                         disabled={currentPage === totalPages}
                         aria-label="Next page"
-                        >
+                      >
                         <ChevronRight className="h-5 w-5" />
-                        </Button>
+                      </Button>
                     </div>
-                    )}
+                  )}
                 </>
-                ) : (
+              ) : (
                 hasSearched && (
-                    <div className="text-center py-16">
+                  <div className="text-center py-16">
                     <Soup className="mx-auto h-16 w-16 text-muted-foreground/50 mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">No Recipes Found</h3>
-                    <p className="text-muted-foreground">We couldn't find any recipes matching your search. Try a different keyword!</p>
-                    </div>
+                    <h3 className="text-xl font-semibold mb-2">
+                      No Recipes Found
+                    </h3>
+                    <p className="text-muted-foreground">
+                      We couldn't find any recipes matching your search. Try a
+                      different keyword!
+                    </p>
+                  </div>
                 )
-                )}
+              )}
             </>
-            )}
+          )}
         </div>
-       </main>
+      </main>
     </div>
   );
 }
