@@ -3,8 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Soup, Search } from 'lucide-react';
 import { RecipeCard } from './RecipeCard';
-import { RecipeSkeletonCard } from './RecipeSkeletonCard';
 import { RecipeListProps } from '../types';
+import { Skeleton } from '@/components/ui/skeleton';
 const RECIPES_PER_PAGE = 10;
 
 export function RecipeList({
@@ -67,7 +67,13 @@ export function RecipeList({
         {loading && (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-8 md:gap-8">
             {Array.from({ length: RECIPES_PER_PAGE }).map((_, index) => (
-              <RecipeSkeletonCard key={index} />
+              <div
+                key={index}
+                className="w-full relative"
+                style={{ paddingBottom: '100%' }}
+              >
+                <Skeleton className="absolute inset-0 bg-muted/20" />
+              </div>
             ))}
           </div>
         )}
