@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { RecipeImageProps } from '../types';
+import { RecipeImageProps } from '@/types/index';
 
 export function RecipeImage({ src, alt }: RecipeImageProps) {
   const [isLoading, setIsLoading] = useState(true);
@@ -28,4 +28,4 @@ export function RecipeImage({ src, alt }: RecipeImageProps) {
       {isLoading && <Skeleton className="absolute inset-0 rounded-lg" />}
     </div>
   );
-} 
+}

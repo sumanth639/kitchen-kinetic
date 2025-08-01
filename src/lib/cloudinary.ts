@@ -1,6 +1,5 @@
 import { useToast } from '@/hooks/use-toast';
 
-// --- Cloudinary setup ---
 const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
 const CLOUDINARY_UPLOAD_PRESET = 'kitchen-kinetic';
@@ -31,7 +30,7 @@ export const uploadImageToCloudinary = async (
   console.log('Cloud Name:', cloudinaryConfig.cloudName);
   console.log('Upload Preset:', cloudinaryConfig.uploadPreset);
   console.log('Image File:', imageFile);
-  
+
   try {
     const response = await fetch(
       `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/upload`,
@@ -68,4 +67,4 @@ export const uploadImageToCloudinary = async (
   } finally {
     setUploadingImage(false);
   }
-}; 
+};

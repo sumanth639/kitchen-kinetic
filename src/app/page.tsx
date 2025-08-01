@@ -14,7 +14,8 @@ export default function Home() {
   const searchParams = useSearchParams();
 
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingRecipes, setLoadingRecipes] = useState(true);
+  const [loadingSearchBar, setLoadingSearchBar] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const page = searchParams.get('page')
@@ -28,7 +29,7 @@ export default function Home() {
   const totalPages = Math.ceil(recipes.length / RECIPES_PER_PAGE);
 
   const fetchRecipesData = useCallback(async (queryTerm: string) => {
-    setLoading(true);
+    setLoadingRecipes(true);
     setError(null);
     setRecipes([]);
 
@@ -42,7 +43,8 @@ export default function Home() {
           : 'An unknown error occurred while fetching recipes'
       );
     } finally {
-      setLoading(false);
+      setLoadingRecipes(false);
+      setLoadingSearchBar(false);
     }
   }, []);
 
@@ -56,14 +58,19 @@ export default function Home() {
     setCurrentPage(page);
   }, [page]);
 
-  const onSubmit = useCallback(async (values: SearchFormValues) => {
-    const params = new URLSearchParams();
-    if (values.searchTerm) {
-      params.set('q', values.searchTerm);
-    }
-    params.set('page', '1');
-    router.push(`/?${params.toString()}`);
-  }, [router]);
+  const onSubmit = useCallback(
+    async (values: SearchFormValues) => {
+      const params = new URLSearchParams();
+      if (values.searchTerm) {
+        params.set('q', values.searchTerm);
+      }
+      params.set('page', '1');
+
+      setLoadingSearchBar(true);
+      router.push(`/?${params.toString()}`);
+    },
+    [router]
+  );
 
   const handlePrevPage = useCallback(() => {
     if (currentPage > 1) {
@@ -87,13 +94,13 @@ export default function Home() {
     <div className="flex flex-col">
       <SearchBar
         onSubmit={onSubmit}
-        loading={loading}
+        loading={loadingSearchBar}
         hasSearched={hasSearched}
         searchTerm={searchTerm}
       />
       <RecipeList
         recipes={recipes}
-        loading={loading}
+        loading={loadingRecipes}
         error={error}
         hasSearched={hasSearched}
         searchTerm={searchTerm}

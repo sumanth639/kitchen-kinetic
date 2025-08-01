@@ -38,4 +38,4 @@ export interface CloudinaryConfig {
   cloudName: string;
   apiKey: string;
   uploadPreset: string;
-} 
+}

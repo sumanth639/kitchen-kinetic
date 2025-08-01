@@ -29,9 +29,8 @@ import { db } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 
-// Import separated components and utilities
-import { recipeFormSchema, RecipeFormValues } from './types';
-import { uploadImageToCloudinary } from './utils';
+import { recipeFormSchema, RecipeFormValues } from '@/types/recipe';
+import { uploadImageToCloudinary } from '@/lib/cloudinary';
 import { ImageUploadField } from './_components/ImageUploadField';
 import { IngredientsField } from './_components/IngredientsField';
 import { RecipeFormSkeleton } from './_components/RecipeFormSkeleton';
@@ -200,7 +199,12 @@ export default function CreateRecipePage() {
                 />
               </div>
 
-              <IngredientsField form={form} fields={fields} append={append} remove={remove} />
+              <IngredientsField
+                form={form}
+                fields={fields}
+                append={append}
+                remove={remove}
+              />
 
               <FormField
                 control={form.control}
@@ -225,7 +229,7 @@ export default function CreateRecipePage() {
                 {(isSubmitting || uploadingImage) && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {uploadingImage ? 'Uploading Image...' : 'Create Recipe'}
+                {uploadingImage ? 'Creating  Recipe...' : 'Create Recipe'}
               </Button>
             </CardFooter>
           </form>

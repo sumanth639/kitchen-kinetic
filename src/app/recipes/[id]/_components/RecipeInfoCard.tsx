@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RecipeInfoCardProps } from '../types';
+import { RecipeInfoCardProps } from '@/types/index';
 
 export function RecipeInfoCard({ recipe, servings }: RecipeInfoCardProps) {
   return (
@@ -23,4 +23,4 @@ export function RecipeInfoCard({ recipe, servings }: RecipeInfoCardProps) {
       </CardContent>
     </Card>
   );
-} 
+}

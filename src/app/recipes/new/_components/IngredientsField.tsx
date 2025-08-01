@@ -15,8 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UseFormReturn, UseFieldArrayAppend, UseFieldArrayRemove } from 'react-hook-form';
-import { RecipeFormValues } from '../types';
+import {
+  UseFormReturn,
+  UseFieldArrayAppend,
+  UseFieldArrayRemove,
+} from 'react-hook-form';
+import { RecipeFormValues } from '@/types/recipe';
 
 interface IngredientsFieldProps {
   form: UseFormReturn<RecipeFormValues>;
@@ -25,7 +29,12 @@ interface IngredientsFieldProps {
   remove: UseFieldArrayRemove;
 }
 
-export function IngredientsField({ form, fields, append, remove }: IngredientsFieldProps) {
+export function IngredientsField({
+  form,
+  fields,
+  append,
+  remove,
+}: IngredientsFieldProps) {
   return (
     <div>
       <Label>Ingredients</Label>
@@ -38,10 +47,7 @@ export function IngredientsField({ form, fields, append, remove }: IngredientsFi
               render={({ field }) => (
                 <FormItem className="flex-grow">
                   <FormControl>
-                    <Input
-                      placeholder={`Ingredient ${index + 1}`}
-                      {...field}
-                    />
+                    <Input placeholder={`Ingredient ${index + 1}`} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -53,11 +59,7 @@ export function IngredientsField({ form, fields, append, remove }: IngredientsFi
               render={({ field }) => (
                 <FormItem className="w-24">
                   <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Qty"
-                      {...field}
-                    />
+                    <Input type="number" placeholder="Qty" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -117,4 +119,4 @@ export function IngredientsField({ form, fields, append, remove }: IngredientsFi
       </Button>
     </div>
   );
-} 
+}

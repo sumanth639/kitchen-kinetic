@@ -1,6 +1,6 @@
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { Recipe } from './types';
+import { Recipe } from '@/types/index';
 
 const API_KEY = process.env.NEXT_PUBLIC_FORKIFY_API_KEY;
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
@@ -25,7 +25,6 @@ export async function getForkifyRecipe(id: string): Promise<Recipe | null> {
         unit: ing.unit,
         description: ing.description,
       })),
-      customRecipe: false,
     };
   } catch {
     return null;
@@ -48,7 +47,6 @@ export async function getFirestoreRecipe(id: string): Promise<Recipe | null> {
         servings: data.servings || 4,
         source_url: data.sourceUrl || '#',
         ingredients: data.ingredients || [],
-        customRecipe: true,
         userId: data.userId,
       };
     } else {
@@ -57,4 +55,4 @@ export async function getFirestoreRecipe(id: string): Promise<Recipe | null> {
   } catch {
     return null;
   }
-} 
+}

@@ -13,7 +13,7 @@ import { RecipeIngredients } from './_components/RecipeIngredients';
 import { RecipeActions } from './_components/RecipeActions';
 import { RecipeInfoCard } from './_components/RecipeInfoCard';
 import { getForkifyRecipe, getFirestoreRecipe } from './utils';
-import { Recipe, Ingredient } from './types';
+import { Recipe, Ingredient } from '@/types/index';
 
 export default function RecipeDetailsPage() {
   const params = useParams();
@@ -22,7 +22,9 @@ export default function RecipeDetailsPage() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [servings, setServings] = useState(0);
-  const [originalIngredients, setOriginalIngredients] = useState<Ingredient[]>([]);
+  const [originalIngredients, setOriginalIngredients] = useState<Ingredient[]>(
+    []
+  );
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
@@ -49,7 +51,9 @@ export default function RecipeDetailsPage() {
       } else {
         setRecipe(fetchedRecipe);
         setServings(fetchedRecipe.servings);
-        setOriginalIngredients(JSON.parse(JSON.stringify(fetchedRecipe.ingredients)));
+        setOriginalIngredients(
+          JSON.parse(JSON.stringify(fetchedRecipe.ingredients))
+        );
       }
       setLoading(false);
     }
@@ -105,7 +109,8 @@ export default function RecipeDetailsPage() {
     if (!user) {
       toast({
         title: 'Please log in',
-        description: 'You need to be logged in to save recipes to your wishlist.',
+        description:
+          'You need to be logged in to save recipes to your wishlist.',
         variant: 'destructive',
       });
       return;
@@ -126,7 +131,6 @@ export default function RecipeDetailsPage() {
           title: recipe.title,
           image_url: recipe.image_url,
           publisher: recipe.publisher,
-          customRecipe: recipe.customRecipe || false,
         });
         toast({
           title: 'Added to wishlist!',
@@ -198,10 +202,7 @@ export default function RecipeDetailsPage() {
             onWishlistToggle={handleWishlistToggle}
           />
 
-          <RecipeInfoCard
-            recipe={recipe}
-            servings={servings}
-          />
+          <RecipeInfoCard recipe={recipe} servings={servings} />
         </div>
       </div>
     </div>

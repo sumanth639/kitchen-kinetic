@@ -2,7 +2,7 @@ import { ExternalLink, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { RecipeActionsProps } from '../types';
+import { RecipeActionsProps } from '@/types/index';
 
 export function RecipeActions({
   recipe,
@@ -24,11 +24,10 @@ export function RecipeActions({
               href={recipe.source_url}
               target="_blank"
               rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2"
             >
-              <span>
-                View Full Recipe
-                <ExternalLink className="ml-2 h-6 w-6" />
-              </span>
+              View Full Recipe
+              <ExternalLink className="h-5 w-5" />
             </a>
           </Button>
 
@@ -41,7 +40,7 @@ export function RecipeActions({
           >
             <Heart
               className={cn(
-                'mr-2 h-6 w-6',
+                'mr-2 h-5 w-5',
                 isInWishlist && 'fill-destructive text-destructive'
               )}
             />
@@ -51,4 +50,4 @@ export function RecipeActions({
       </CardContent>
     </Card>
   );
-} 
+}

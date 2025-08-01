@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { CardDescription, CardTitle } from '@/components/ui/card';
 import { Clock, Users, ChefHat, Minus, Plus } from 'lucide-react';
 import { RecipeImage } from './RecipeImage';
-import { Recipe } from '../types';
+import { Recipe } from '@/types/index';
 
 interface RecipeHeroProps {
   recipe: Recipe;
@@ -10,7 +10,11 @@ interface RecipeHeroProps {
   onServingsChange: (change: number) => void;
 }
 
-export function RecipeHero({ recipe, servings, onServingsChange }: RecipeHeroProps) {
+export function RecipeHero({
+  recipe,
+  servings,
+  onServingsChange,
+}: RecipeHeroProps) {
   return (
     <div className="mb-8 lg:mb-12">
       <RecipeImage src={recipe.image_url} alt={recipe.title} />
@@ -22,9 +26,6 @@ export function RecipeHero({ recipe, servings, onServingsChange }: RecipeHeroPro
         <CardDescription className="flex items-center justify-center gap-2 text-lg mb-6">
           <ChefHat className="h-6 w-6 text-muted-foreground" />
           <span>By {recipe.publisher}</span>
-          {recipe?.customRecipe && (
-            <span className="text-sm text-muted-foreground/80">(Your Recipe)</span>
-          )}
         </CardDescription>
 
         <div className="flex flex-wrap justify-center gap-6 lg:gap-8 text-muted-foreground">
@@ -62,4 +63,4 @@ export function RecipeHero({ recipe, servings, onServingsChange }: RecipeHeroPro
       </div>
     </div>
   );
-} 
+}
