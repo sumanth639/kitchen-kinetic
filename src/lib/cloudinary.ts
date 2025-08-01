@@ -16,7 +16,6 @@ export const uploadImageToCloudinary = async (
   toast: ReturnType<typeof useToast>['toast']
 ): Promise<string | null> => {
   if (!imageFile) {
-    console.log('No image file selected.');
     return null;
   }
 
@@ -26,10 +25,7 @@ export const uploadImageToCloudinary = async (
   formData.append('upload_preset', cloudinaryConfig.uploadPreset);
   formData.append('cloud_name', cloudinaryConfig.cloudName);
 
-  console.log('Attempting Cloudinary upload...');
-  console.log('Cloud Name:', cloudinaryConfig.cloudName);
-  console.log('Upload Preset:', cloudinaryConfig.uploadPreset);
-  console.log('Image File:', imageFile);
+ 
 
   try {
     const response = await fetch(
