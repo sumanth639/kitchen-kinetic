@@ -17,7 +17,9 @@ import { Loader2, Search, Sparkles, ChefHat } from 'lucide-react';
 import { SearchBarProps } from '../types';
 
 const searchFormSchema = z.object({
-  searchTerm: z.string().min(0, 'Please enter something to search for'),
+  searchTerm: z
+    .string()
+    .min(1, 'Please enter a dish or ingredient to search for.'),
 });
 
 type SearchFormData = z.infer<typeof searchFormSchema>;
@@ -102,32 +104,32 @@ export function SearchBar({
                     <FormItem className="flex-grow">
                       <FormControl>
                         <div className="relative group">
-                          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400 z-10 transition-colors group-focus-within:text-orange-400" />
+                          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-5 w-5 sm:h-6 sm:w-6 text-gray-400 z-10 transition-colors group-focus-within:text-orange-400" />
                           <Input
                             placeholder="Search for pizza, pasta, salad..."
-                            className="pl-10 sm:pl-12 pr-4 h-12 sm:h-14 text-sm sm:text-base !bg-gray-900/50 backdrop-blur-sm shadow-xl rounded-lg sm:rounded-xl transition-all duration-300 !text-white placeholder:!text-gray-400 !border-gray-700/50 focus:!border-orange-400/50 focus:!ring-2 focus:!ring-orange-500/20"
+                            className="pl-10 sm:pl-12 pr-4 h-14 sm:h-16 text-base sm:text-lg !bg-gray-900/50 backdrop-blur-sm shadow-xl rounded-lg sm:rounded-xl transition-all duration-300 !text-white placeholder:!text-gray-400 !border-gray-700/50 focus:!border-orange-400/50 focus:!ring-2 focus:!ring-orange-500/20"
                             {...field}
                           />
                         </div>
                       </FormControl>
-                      <FormMessage className="text-red-400 mt-2" />
+                      <FormMessage className="text-red-400 mt-2 pl-2" />
                     </FormItem>
                   )}
                 />
 
                 <Button
                   type="submit"
-                  className="h-12 w-12 sm:h-14 sm:w-auto sm:px-8 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl shadow-xl transition-all duration-300 whitespace-nowrap
+                  className="h-14 w-14 sm:h-16 sm:w-auto sm:px-8 text-base sm:text-lg font-semibold rounded-lg sm:rounded-xl shadow-xl transition-all duration-300 whitespace-nowrap
                             
                              text-white border-0 hover:shadow-2xl hover:shadow-orange-500/25 hover:scale-105
                              disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center"
                   disabled={isButtonLoading}
                 >
                   {isButtonLoading ? (
-                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                    <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
                   ) : (
                     <>
-                      <Search className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
+                      <Search className="h-5 w-5 sm:h-6 sm:w-6 sm:mr-2" />
                       <span className="hidden sm:inline">Search</span>
                     </>
                   )}
