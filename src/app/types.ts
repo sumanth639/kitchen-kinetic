@@ -34,4 +34,4 @@ export interface RecipeListProps {
   totalPages: number;
   onPrevPage: () => void;
   onNextPage: () => void;
-} 
+}

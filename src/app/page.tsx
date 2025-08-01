@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { SearchBar } from './_components/SearchBar';
 import { RecipeList } from './_components/RecipeList';
@@ -12,7 +12,7 @@ const RECIPES_PER_PAGE = 10;
 export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
+  const recipeListRef = useRef<HTMLDivElement>(null);
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [loadingRecipes, setLoadingRecipes] = useState(true);
   const [loadingSearchBar, setLoadingSearchBar] = useState(false);
@@ -52,7 +52,18 @@ export default function Home() {
     const queryTermFromUrl = searchParams.get('q');
     setHasSearched(!!queryTermFromUrl);
     fetchRecipesData(queryTermFromUrl || '');
+    if (recipeListRef.current) {
+      recipeListRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [searchParams, fetchRecipesData]);
+
+  useEffect(() => {
+    setCurrentPage(page);
+
+    if (recipeListRef.current) {
+      recipeListRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [page]);
 
   useEffect(() => {
     setCurrentPage(page);
@@ -99,6 +110,7 @@ export default function Home() {
         searchTerm={searchTerm}
       />
       <RecipeList
+        ref={recipeListRef}
         recipes={recipes}
         loading={loadingRecipes}
         error={error}
