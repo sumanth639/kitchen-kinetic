@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Soup, Search } from 'lucide-react';
 import { RecipeCard } from './RecipeCard';
 import { RecipeSkeletonCard } from './RecipeSkeletonCard';
 import { RecipeListProps } from '../types';
-const RECIPES_PER_PAGE = 8;
+const RECIPES_PER_PAGE = 10;
 
 export function RecipeList({
   recipes,
@@ -65,7 +65,7 @@ export function RecipeList({
         )}
 
         {loading && (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-8 md:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-8 md:gap-8">
             {Array.from({ length: RECIPES_PER_PAGE }).map((_, index) => (
               <RecipeSkeletonCard key={index} />
             ))}
@@ -90,7 +90,7 @@ export function RecipeList({
           <>
             {recipes.length > 0 ? (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-8 md:gap-8 mb-8 sm:mb-12">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-8 md:gap-8 mb-8 sm:mb-12">
                   {paginatedRecipes.map((recipe) => (
                     <RecipeCard
                       key={recipe.id}
