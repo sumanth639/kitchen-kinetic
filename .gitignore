@@ -32,6 +32,8 @@ pnpm-debug.log*
 .firebase
 firebase-debug.log
 database-debug.log
+.idx
+docs
 
 # IDE
 .idea
