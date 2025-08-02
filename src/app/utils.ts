@@ -10,6 +10,7 @@ import {
   QueryConstraint,
 } from 'firebase/firestore';
 import { RecipeListItem } from './types';
+import Fuse from 'fuse.js'; // Import Fuse.js
 
 const API_KEY = process.env.NEXT_PUBLIC_FORKIFY_API_KEY;
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
@@ -21,7 +22,6 @@ export async function fetchRecipes(
   let qConstraints: QueryConstraint[] = [];
 
   // --- Step 1: Query Firestore ---
-  // The Firestore query logic remains solid for a prefix search
   if (queryTerm) {
     const lowerCaseQuery = queryTerm.toLowerCase();
     qConstraints.push(
@@ -51,7 +51,7 @@ export async function fetchRecipes(
   );
 
   // --- Step 2: Determine Forkify Search Term and Fetch ---
-  const forkifySearchTerm = queryTerm || 'pasta'; // Use 'pasta' as the default if no queryTerm is provided
+  const forkifySearchTerm = queryTerm || 'pasta';
 
   let forkifyRecipes: RecipeListItem[] = [];
   try {
@@ -61,7 +61,6 @@ export async function fetchRecipes(
 
     if (!forkifyResponse.ok) {
       console.error(`Forkify API error: ${forkifyResponse.statusText}`);
-      // Don't throw, just return an empty array for this source
       forkifyRecipes = [];
     } else {
       const forkifyData = await forkifyResponse.json();
@@ -78,12 +77,10 @@ export async function fetchRecipes(
     forkifyRecipes = [];
   }
 
-  // --- Step 3: Combine and Sort Recipes ---
+  // --- Step 3: Combine recipes as before ---
   const combinedRecipesMap = new Map<string, RecipeListItem>();
 
-  // Add custom recipes first to ensure they take precedence
   firestoreRecipes.forEach((rec) => combinedRecipesMap.set(rec.id, rec));
-  // Add Forkify recipes, but only if they don't already exist
   forkifyRecipes.forEach((rec) => {
     if (!combinedRecipesMap.has(rec.id)) {
       combinedRecipesMap.set(rec.id, rec);
@@ -92,22 +89,30 @@ export async function fetchRecipes(
 
   let finalRecipes = Array.from(combinedRecipesMap.values());
 
-  // Sort the final combined list
-  finalRecipes.sort((a, b) => {
-    // Custom recipes first
-    if (a.customRecipe && !b.customRecipe) return -1;
-    if (!a.customRecipe && b.customRecipe) return 1;
+  // --- Step 4: Perform fuzzy search with Fuse.js ---
+  if (queryTerm && finalRecipes.length > 0) {
+    const fuseOptions = {
+      // Keys to search in the recipe object
+      keys: ['title', 'publisher'],
+      // Sets how lenient the search is. 0.0 is exact match, 1.0 is a very loose match.
+      // A value of 0.3 is a good starting point for typo tolerance.
+      threshold: 0.3,
+      includeScore: true, // Include a relevance score in the result
+    };
+    const fuse = new Fuse(finalRecipes, fuseOptions);
 
-    // Sort custom recipes by date (newest first)
-    if (a.customRecipe && b.customRecipe) {
+    const searchResults = fuse.search(queryTerm);
+
+    // Map the Fuse results back to the original recipe objects
+    finalRecipes = searchResults.map((result) => result.item);
+  } else if (!queryTerm) {
+    // If no query, sort custom recipes by date (newest first)
+    finalRecipes.sort((a, b) => {
       const timeA = a.createdAt?.toMillis() ?? 0;
       const timeB = b.createdAt?.toMillis() ?? 0;
       return timeB - timeA;
-    }
-
-    // Sort all other recipes alphabetically
-    return a.title.localeCompare(b.title);
-  });
+    });
+  }
 
   return finalRecipes;
 }
