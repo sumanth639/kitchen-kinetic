@@ -151,11 +151,14 @@ export function SearchBar({
                 'Healthy Salads',
                 'Quick Breakfast',
                 'Pizza',
-              ].map((term, index) => (
+              ].map((term) => (
                 <button
                   key={term}
                   className="px-2 sm:px-3 py-1 text-xs bg-white/10 hover:bg-white/20 text-white/80 rounded-full border border-white/20 transition-all duration-200 hover:scale-105 truncate"
-                  onClick={() => form.setValue('searchTerm', term)}
+                  onClick={() => {
+                    form.setValue('searchTerm', term);
+                    form.handleSubmit(onSubmit)();
+                  }}
                 >
                   {term}
                 </button>
