@@ -10,7 +10,7 @@ import {
   QueryConstraint,
 } from 'firebase/firestore';
 import { RecipeListItem } from './types';
-import Fuse from 'fuse.js'; // Import Fuse.js
+import Fuse from 'fuse.js';
 
 const API_KEY = process.env.NEXT_PUBLIC_FORKIFY_API_KEY;
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
@@ -21,7 +21,6 @@ export async function fetchRecipes(
   const recipesCollectionRef = collection(db, 'recipes');
   let qConstraints: QueryConstraint[] = [];
 
-  // --- Step 1: Query Firestore ---
   if (queryTerm) {
     const lowerCaseQuery = queryTerm.toLowerCase();
     qConstraints.push(
@@ -29,7 +28,6 @@ export async function fetchRecipes(
       where('titleLowerCase', '<=', lowerCaseQuery + '\uf8ff')
     );
   } else {
-    // If no query, fetch the latest custom recipes
     qConstraints.push(orderBy('createdAt', 'desc'));
   }
 
@@ -50,7 +48,6 @@ export async function fetchRecipes(
     }
   );
 
-  // --- Step 2: Determine Forkify Search Term and Fetch ---
   const forkifySearchTerm = queryTerm || 'pasta';
 
   let forkifyRecipes: RecipeListItem[] = [];
@@ -77,7 +74,6 @@ export async function fetchRecipes(
     forkifyRecipes = [];
   }
 
-  // --- Step 3: Combine recipes as before ---
   const combinedRecipesMap = new Map<string, RecipeListItem>();
 
   firestoreRecipes.forEach((rec) => combinedRecipesMap.set(rec.id, rec));
@@ -89,24 +85,19 @@ export async function fetchRecipes(
 
   let finalRecipes = Array.from(combinedRecipesMap.values());
 
-  // --- Step 4: Perform fuzzy search with Fuse.js ---
   if (queryTerm && finalRecipes.length > 0) {
     const fuseOptions = {
-      // Keys to search in the recipe object
       keys: ['title', 'publisher'],
-      // Sets how lenient the search is. 0.0 is exact match, 1.0 is a very loose match.
-      // A value of 0.3 is a good starting point for typo tolerance.
+
       threshold: 0.3,
-      includeScore: true, // Include a relevance score in the result
+      includeScore: true,
     };
     const fuse = new Fuse(finalRecipes, fuseOptions);
 
     const searchResults = fuse.search(queryTerm);
 
-    // Map the Fuse results back to the original recipe objects
     finalRecipes = searchResults.map((result) => result.item);
   } else if (!queryTerm) {
-    // If no query, sort custom recipes by date (newest first)
     finalRecipes.sort((a, b) => {
       const timeA = a.createdAt?.toMillis() ?? 0;
       const timeB = b.createdAt?.toMillis() ?? 0;

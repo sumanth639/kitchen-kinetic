@@ -43,7 +43,7 @@ export function SearchBar({
     <section className="relative w-full -mt-14 py-12 sm:py-16 md:py-20 lg:py-32 bg-cover bg-center bg-no-repeat overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/70 backdrop-blur-sm" />
       <Image
-        src="/hero-1.jpg"
+        src="/hero-1.webp"
         alt="Hero background"
         fill
         className="object-cover -z-10 scale-105 hover:scale-110 transition-transform duration-[20s] ease-out"

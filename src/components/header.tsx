@@ -43,7 +43,7 @@ export function Header() {
         >
           <div className="p-1.5">
             <img
-              src="/logo.png"
+              src="/logo.webp"
               alt="Kitchen Kinetic Logo"
               className="h-16 w-16 object-contain"
             />
