@@ -146,23 +146,20 @@ export function SearchBar({
               Popular searches:
             </p>
             <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-2">
-              {[
-                'Italian Pasta',
-                'Healthy Salads',
-                'Quick Breakfast',
-                'Pizza',
-              ].map((term) => (
-                <button
-                  key={term}
-                  className="px-2 sm:px-3 py-1 text-xs bg-white/10 hover:bg-white/20 text-white/80 rounded-full border border-white/20 transition-all duration-200 hover:scale-105 truncate"
-                  onClick={() => {
-                    form.setValue('searchTerm', term);
-                    form.handleSubmit(onSubmit)();
-                  }}
-                >
-                  {term}
-                </button>
-              ))}
+              {['Fruit Salads', 'Chicken ', 'Quick Breakfast', 'Pizza'].map(
+                (term) => (
+                  <button
+                    key={term}
+                    className="px-2 sm:px-3 py-1 text-xs bg-white/10 hover:bg-white/20 text-white/80 rounded-full border border-white/20 transition-all duration-200 hover:scale-105 truncate"
+                    onClick={() => {
+                      form.setValue('searchTerm', term);
+                      form.handleSubmit(onSubmit)();
+                    }}
+                  >
+                    {term}
+                  </button>
+                )
+              )}
             </div>
           </div>
         </div>
