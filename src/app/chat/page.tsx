@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ChatMessage, chatWithBot } from '@/ai/flows/recipe-chat-flow';
+import { chatWithBot } from '@/ai/flows/recipe-chat-flow';
+import { ChatMessage } from '@/ai/flows/recipe-chat-flow.types';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 

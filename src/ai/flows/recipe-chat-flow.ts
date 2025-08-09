@@ -4,26 +4,15 @@
  * @fileOverview A recipe and culinary assistant chatbot flow.
  *
  * - chatWithBot - A function that handles the conversation with the AI assistant.
- * - ChatInput - The input type for the chatWithBot function.
- * - ChatMessage - The type for a single chat message.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-
-const ChatMessageSchema = z.object({
-  role: z.enum(['user', 'model']),
-  content: z.string(),
-});
-
-export type ChatMessage = z.infer<typeof ChatMessageSchema>;
-
-export const ChatInputSchema = z.object({
-  history: z.array(ChatMessageSchema),
-  prompt: z.string().describe('The latest message from the user.'),
-});
-
-export type ChatInput = z.infer<typeof ChatInputSchema>;
+import {
+  ChatInput,
+  ChatInputSchema,
+  ChatMessage,
+} from './recipe-chat-flow.types';
 
 const SYSTEM_PROMPT = `You are an expert culinary assistant named "Kinetic Chef" for the Kitchen Kinetic app. 
 Your role is to help users with all things cooking. You are friendly, encouraging, and knowledgeable.
@@ -51,7 +40,7 @@ const chatFlow = ai.defineFlow(
 
     const fullHistory = [
       { role: 'system' as const, content: SYSTEM_PROMPT },
-      ...history.map((msg) => ({
+      ...history.map((msg: ChatMessage) => ({
         role: msg.role,
         content: msg.content,
       })),
