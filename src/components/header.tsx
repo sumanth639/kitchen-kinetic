@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -80,7 +81,7 @@ export function Header() {
                   className="h-9 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
                 >
                   <Sparkles className="h-4 w-4 mr-2" />
-                  AI Chat
+                  Ask Kinetic
                 </Button>
               </Link>
               <TooltipProvider>
