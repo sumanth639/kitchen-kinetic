@@ -10,6 +10,8 @@ import {
   Heart,
   MessageSquare,
   Sparkles,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
@@ -63,8 +65,6 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-3">
-          <ThemeToggle />
-
           {loading ? (
             // Display a loading state for all buttons while authentication is loading
             <>
@@ -85,21 +85,6 @@ export function Header() {
                 </Button>
               </Link>
               <TooltipProvider>
-                {/* Wishlist Button */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link href={getLinkHref('/wishlist')}>
-                      <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                        <Heart className="h-4 w-4" />
-                        <span className="sr-only">Wishlist</span>
-                      </Button>
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Wishlist</p>
-                  </TooltipContent>
-                </Tooltip>
-
                 {/* Create Recipe Button */}
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -153,6 +138,22 @@ export function Header() {
                         <span>Profile</span>
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/wishlist" className="cursor-pointer">
+                        <Heart className="mr-2 h-4 w-4" />
+                        <span>Wishlist</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <div className='flex items-center w-full'>
+                        <Sun className="mr-2 h-4 w-4 dark:hidden" />
+                        <Moon className="mr-2 h-4 w-4 hidden dark:inline-block" />
+                        <span>Theme</span>
+                        <div className="ml-auto">
+                           <ThemeToggle />
+                        </div>
+                      </div>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
@@ -161,6 +162,8 @@ export function Header() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
+                <>
+                <ThemeToggle />
                 <Button
                   asChild
                   variant="outline"
@@ -169,6 +172,7 @@ export function Header() {
                 >
                   <Link href="/login">Login</Link>
                 </Button>
+                </>
               )}
             </div>
           )}
