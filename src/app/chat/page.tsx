@@ -182,14 +182,20 @@ export default function ChatPage() {
         content: currentInput,
       };
 
-      // Save user message to Firestore
+      // Add user message to local state immediately and save to Firestore
+      setMessages((prev) => [...prev, userMessage]);
       await addMessageToChat(user.uid, currentChatId, userMessage);
 
-      const chatInput: ChatInput = {
-        history: messages.map((msg) => ({
+      // Create a clean history for the AI, without complex objects
+      const chatHistoryForAI: Omit<ChatMessage, 'timestamp'>[] = messages.map(
+        (msg) => ({
           role: msg.role,
           content: msg.content,
-        })),
+        })
+      );
+
+      const chatInput: ChatInput = {
+        history: chatHistoryForAI,
         prompt: currentInput,
       };
 
@@ -197,7 +203,12 @@ export default function ChatPage() {
       const reader = stream.getReader();
       let modelResponse = '';
       let isFirstChunk = true;
-      const decoder = new TextDecoder();
+
+      // Add a placeholder for the AI response in the UI
+      setMessages((prev) => [
+        ...prev,
+        { role: 'model', content: '' },
+      ]);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -206,30 +217,31 @@ export default function ChatPage() {
           break;
         }
 
-        modelResponse += decoder.decode(value, { stream: true });
+        modelResponse += value;
 
-        if (isFirstChunk) {
-          setMessages((prev) => [
-            ...prev,
-            { role: 'model', content: modelResponse },
-          ]);
-          isFirstChunk = false;
-        } else {
-          setMessages((prev) =>
-            prev.map((msg, index) =>
-              index === prev.length - 1
-                ? { ...msg, content: modelResponse }
-                : msg
-            )
-          );
-        }
+        // Update the last message (the AI's response) in the UI
+        setMessages((prev) =>
+          prev.map((msg, index) =>
+            index === prev.length - 1
+              ? { ...msg, content: modelResponse }
+              : msg
+          )
+        );
       }
 
       // Save the final model response to Firestore
-      await addMessageToChat(user.uid, currentChatId, {
+      const finalModelMessage: ChatMessage = {
         role: 'model',
         content: modelResponse,
-      });
+      };
+      await addMessageToChat(user.uid, currentChatId, finalModelMessage);
+
+      // Update the final message in the local state to ensure consistency
+      setMessages((prev) =>
+        prev.map((msg, index) =>
+          index === prev.length - 1 ? finalModelMessage : msg
+        )
+      );
     } catch (error) {
       console.error('Error during chat:', error);
       toast({
@@ -237,9 +249,12 @@ export default function ChatPage() {
         description: 'Sorry, something went wrong. Please try again.',
         variant: 'destructive',
       });
+      // Remove the placeholder AI message if an error occurs
+      setMessages((prev) => prev.filter((msg, index) => index !== prev.length - 1 || msg.role !== 'model'));
       setIsLoading(false);
     }
   };
+
 
   if (authLoading || !user) {
     return (
@@ -341,7 +356,7 @@ export default function ChatPage() {
                                 ),
                         }}
                       />
-                      {message.role === 'model' && (
+                      {message.role === 'model' && message.content && (
                         <ChatMessageActions message={message.content} />
                       )}
                     </div>
@@ -354,7 +369,7 @@ export default function ChatPage() {
                     )}
                   </div>
                 ))}
-                {isLoading && messages[messages.length - 1]?.role !== 'model' && (
+                 {isLoading && (
                   <div className="flex gap-3">
                     <Avatar>
                       <AvatarFallback>AI</AvatarFallback>
