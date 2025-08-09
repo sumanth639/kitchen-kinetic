@@ -199,18 +199,26 @@ export default function ChatPage() {
 
       const stream = await chatWithBot(chatInput);
       const reader = stream.getReader();
+      const decoder = new TextDecoder();
       let modelResponse = '';
 
       // Add a placeholder for the AI response in the UI
       setMessages((prev) => [...prev, { role: 'model', content: '' }]);
 
-      while (true) {
+      const read = async () => {
         const { done, value } = await reader.read();
         if (done) {
           setIsLoading(false);
-          break;
+          // Save the final model response to Firestore
+          const finalModelMessage: ChatMessage = {
+            role: 'model',
+            content: modelResponse,
+          };
+          await addMessageToChat(user.uid, currentChatId!, finalModelMessage);
+          return;
         }
-        modelResponse += value;
+        const chunk = decoder.decode(value, { stream: true });
+        modelResponse += chunk;
         setMessages((prev) =>
           prev.map((msg, index) =>
             index === prev.length - 1
@@ -218,21 +226,9 @@ export default function ChatPage() {
               : msg
           )
         );
-      }
-
-      // Save the final model response to Firestore
-      const finalModelMessage: ChatMessage = {
-        role: 'model',
-        content: modelResponse,
+        read();
       };
-      await addMessageToChat(user.uid, currentChatId, finalModelMessage);
-
-      // Update the final message in the local state to ensure consistency
-      setMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 ? finalModelMessage : msg
-        )
-      );
+      read();
     } catch (error) {
       console.error('Error during chat:', error);
       toast({
@@ -243,7 +239,8 @@ export default function ChatPage() {
       // Remove the placeholder AI message if an error occurs
       setMessages((prev) =>
         prev.filter(
-          (msg, index) => index !== prev.length - 1 || msg.role !== 'model'
+          (msg, index) =>
+            index !== prev.length - 1 || msg.role !== 'model' || msg.content
         )
       );
       setIsLoading(false);
@@ -363,7 +360,7 @@ export default function ChatPage() {
                     )}
                   </div>
                 ))}
-                {isLoading && (
+                {isLoading && messages[messages.length - 1]?.role !== 'model' && (
                   <div className="flex gap-3">
                     <Avatar>
                       <AvatarFallback>AI</AvatarFallback>
