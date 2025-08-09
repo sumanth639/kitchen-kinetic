@@ -47,6 +47,7 @@ export default function ChatPage() {
       let botMessageContent = '';
       let botMessage: ChatMessage = { role: 'model', content: '' };
 
+      // Add the initial empty bot message
       setMessages((prev) => [...prev, botMessage]);
 
       while (true) {
@@ -130,17 +131,17 @@ export default function ChatPage() {
               )}
             </div>
           ))}
-          {isPending && messages[messages.length-1]?.role !== 'model' && (
-             <div className="flex items-center gap-2 text-muted-foreground">
+           {isPending && messages[messages.length - 1]?.role === 'user' && (
+             <div className="flex items-start gap-4 justify-start">
               <Avatar className="h-8 w-8">
                 <AvatarFallback>
                   <Bot className="h-5 w-5" />
                 </AvatarFallback>
               </Avatar>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 bg-muted p-3 rounded-lg">
                 <Circle className="h-2 w-2 animate-pulse" />
-                <Circle className="h-2 w-2 animate-pulse delay-150" />
-                <Circle className="h-2 w-2 animate-pulse delay-300" />
+                <Circle className="h-2 w-2 animate-pulse [animation-delay:0.2s]" />
+                <Circle className="h-2 w-2 animate-pulse [animation-delay:0.4s]" />
               </div>
             </div>
           )}
