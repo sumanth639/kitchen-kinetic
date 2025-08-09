@@ -27,7 +27,7 @@ export function ChatMessageActions({ message }: ChatMessageActionsProps) {
   };
 
   return (
-    <div className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
       <Button onClick={onCopy} variant="ghost" size="icon" className="h-7 w-7">
         {hasCopied ? (
           <Check className="h-4 w-4 text-green-500" />
