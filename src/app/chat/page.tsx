@@ -38,6 +38,7 @@ import {
   createChatSession,
   subscribeToChatSessions,
   subscribeToMessages,
+  addMessageToChat,
 } from '@/lib/firestore-utils';
 import { ChatHistory } from './_components/ChatHistory';
 import { useToast } from '@/hooks/use-toast';
@@ -146,22 +147,32 @@ export default function ChatPage() {
     let currentChatId = activeChatId;
 
     try {
+      // If there's no active chat, create a new one.
       if (!currentChatId) {
         currentChatId = await createChatSession(user.uid, currentInput);
         setActiveChatId(currentChatId);
       }
 
-      const chatInput: ChatInput = {
-        history: messages.slice(),
-        prompt: currentInput,
+      const userMessage: ChatMessage = {
+        role: 'user',
+        content: currentInput,
       };
 
+      // Save user message to Firestore
+      await addMessageToChat(user.uid, currentChatId, userMessage);
+
       // Optimistically update UI with user message
-      setMessages((prev) => [...prev, { role: 'user', content: currentInput }]);
+      setMessages((prev) => [...prev, userMessage]);
       // Add placeholder for model response
       setMessages((prev) => [...prev, { role: 'model', content: '' }]);
 
-      const stream = await chatWithBot(chatInput, user.uid, currentChatId);
+      const chatInput: ChatInput = {
+        // Send the history *before* the new user message
+        history: messages,
+        prompt: currentInput,
+      };
+
+      const stream = await chatWithBot(chatInput);
       let modelResponse = '';
 
       for await (const chunk of stream) {
@@ -174,6 +185,12 @@ export default function ChatPage() {
           )
         );
       }
+
+      // Save the final model response to Firestore
+      await addMessageToChat(user.uid, currentChatId, {
+        role: 'model',
+        content: modelResponse,
+      });
     } catch (error) {
       console.error('Error during chat:', error);
       toast({
@@ -241,7 +258,7 @@ export default function ChatPage() {
           <CardContent className="flex-1 p-0 overflow-hidden">
             <ScrollArea className="h-full p-6" ref={scrollAreaRef}>
               <div className="space-y-6">
-                {messages.length === 0 && (
+                {messages.length === 0 && !isLoading && (
                   <div className="text-center text-muted-foreground pt-10">
                     <p className="text-lg">
                       {activeChatId
@@ -300,6 +317,20 @@ export default function ChatPage() {
                     )}
                   </div>
                 ))}
+                 {isLoading && messages[messages.length -1]?.role !== 'model' && (
+                    <div className="flex gap-3">
+                      <Avatar>
+                        <AvatarFallback>AI</AvatarFallback>
+                      </Avatar>
+                      <div className="rounded-lg px-4 py-2 max-w-[80%] bg-muted">
+                        <div className="flex items-center space-x-1 p-2">
+                          <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                          <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                          <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
               </div>
             </ScrollArea>
           </CardContent>
