@@ -1,5 +1,5 @@
+
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 interface ProfileLoadingSkeletonProps {
   isSection?: boolean;
@@ -20,18 +20,22 @@ export default function ProfileLoadingSkeleton({
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card className="w-full max-w-6xl mx-auto">
-        <CardHeader className="flex flex-row items-center gap-4">
-          <Skeleton className="h-16 w-16 rounded-full" />
+      <div className="w-full max-w-6xl mx-auto">
+        <div className="flex flex-row items-center gap-4 border-b pb-6">
+          <Skeleton className="h-20 w-20 rounded-full" />
           <div className="space-y-2">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-64" />
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-5 w-48" />
           </div>
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-40 w-full" />
-        </CardContent>
-      </Card>
+        </div>
+        <div className="mt-8">
+           <div className="flex justify-between items-center mb-6">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-10 w-36" />
+           </div>
+          <ProfileLoadingSkeleton isSection={true} />
+        </div>
+      </div>
     </div>
   );
 }

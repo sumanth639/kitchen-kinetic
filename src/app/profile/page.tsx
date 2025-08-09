@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -11,14 +12,6 @@ import {
   subscribeToUserRecipes,
   deleteUserRecipe,
 } from '@/lib/firestore-utils';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-} from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 
 import ProfileHeader from './_components/ProfileHeader';
@@ -106,11 +99,11 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card className="w-full max-w-6xl mx-auto">
+      <div className="w-full max-w-6xl mx-auto">
         <ProfileHeader user={user} />
-        <CardContent>
+        <div className="mt-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <h2 className="text-xl font-semibold">My Recipes</h2>
+            <h2 className="text-2xl font-bold">My Recipes</h2>
             <Button asChild>
               <Link href="/recipes/new">
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -129,8 +122,8 @@ export default function ProfilePage() {
           ) : (
             <UserRecipeEmptyState />
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

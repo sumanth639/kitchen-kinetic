@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -7,13 +8,6 @@ import { Heart } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { subscribeToWishlist, removeFromWishlist } from '@/lib/firestore-utils';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import WishlistGrid from './_components/WishlistGrid';
@@ -87,34 +81,33 @@ export default function WishlistPage() {
   if (authLoading || !user) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Card className="w-full max-w-6xl mx-auto">
-          <CardHeader>
+        <div className="w-full max-w-6xl mx-auto">
+          <div className="mb-6 border-b pb-4">
             <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-64" />
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-48 w-full rounded-lg" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+            <Skeleton className="h-4 w-64 mt-2" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-48 w-full rounded-lg" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card className="w-full max-w-6xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <Heart className="h-6 w-6 text-primary" />
-            My Wishlist
-          </CardTitle>
-          <CardDescription>The recipes you've saved for later.</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="w-full max-w-6xl mx-auto">
+        <div className="mb-6 border-b pb-4">
+            <h1 className="flex items-center gap-2 text-3xl font-bold">
+                <Heart className="h-8 w-8 text-primary" />
+                My Wishlist
+            </h1>
+            <p className="text-muted-foreground mt-1">The recipes you've saved for later.</p>
+        </div>
+        
+        <div>
           {wishlistLoading ? (
             <WishlistLoadingSkeleton />
           ) : wishlist.length > 0 ? (
@@ -126,8 +119,8 @@ export default function WishlistPage() {
           ) : (
             <WishlistEmptyState />
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

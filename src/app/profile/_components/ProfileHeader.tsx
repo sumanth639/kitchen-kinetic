@@ -1,5 +1,5 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CardHeader, CardTitle } from '@/components/ui/card';
 import { User } from 'firebase/auth';
 
 interface ProfileHeaderProps {
@@ -8,17 +8,17 @@ interface ProfileHeaderProps {
 
 export default function ProfileHeader({ user }: ProfileHeaderProps) {
   return (
-    <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-      <Avatar className="h-16 w-16">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b pb-6">
+      <Avatar className="h-20 w-20">
         <AvatarImage src={user.photoURL || undefined} />
-        <AvatarFallback>{user.email?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+        <AvatarFallback className="text-2xl">{user.email?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
       </Avatar>
       <div className="flex-grow">
-        <CardTitle className="text-2xl">
+        <h1 className="text-3xl font-bold">
           {user.displayName || 'User'}'s Dashboard
-        </CardTitle>
+        </h1>
         <p className="text-muted-foreground">{user.email}</p>
       </div>
-    </CardHeader>
+    </div>
   );
 }
