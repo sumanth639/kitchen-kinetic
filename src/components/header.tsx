@@ -74,7 +74,11 @@ export function Header() {
           ) : (
             <div className="flex items-center gap-1">
               <Link href="/chat">
-                <Button variant="outline" size="sm" className="h-9">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
+                >
                   <Sparkles className="h-4 w-4 mr-2" />
                   AI Chat
                 </Button>
