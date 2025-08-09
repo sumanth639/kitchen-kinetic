@@ -27,10 +27,10 @@ const markdownToHtml = (text: string) => {
     .replace(/### (.*)/g, '<h3>$1</h3>')
     // Bold
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    // Italic
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    // Unordered lists
-    .replace(/^\s*-\s(.*)/gm, '<ul><li>$1</li></ul>')
+    // Italic - needs to be careful not to conflict with list items
+    .replace(/(\s)\*(.*?)\*(\s)/g, '$1<em>$2</em>$3')
+    // Unordered lists (for both * and -)
+    .replace(/^\s*[\*-]\s(.*)/gm, '<ul><li>$1</li></ul>')
     .replace(/<\/ul>\n<ul>/g, '\n') // Combine lists
     // Ordered lists
     .replace(/^\s*\d+\.\s(.*)/gm, '<ol><li>$1</li></ol>')
