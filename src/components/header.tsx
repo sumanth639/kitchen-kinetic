@@ -9,7 +9,7 @@ import {
   PlusCircle,
   Heart,
   MessageSquare,
-  Sparkles,
+  Bot,
   Moon,
   Sun,
 } from 'lucide-react';
@@ -80,7 +80,7 @@ export function Header() {
                   size="sm"
                   className="h-9 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
                 >
-                  <Sparkles className="h-4 w-4 mr-2" />
+                  <Bot className="h-4 w-4 mr-2" />
                   Ask Kinetic
                 </Button>
               </Link>
