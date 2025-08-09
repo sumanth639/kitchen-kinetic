@@ -130,7 +130,7 @@ export default function ChatPage() {
         behavior: 'smooth',
       });
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -157,12 +157,8 @@ export default function ChatPage() {
       // Save user message to Firestore
       await addMessageToChat(user.uid, currentChatId, userMessage);
 
-      // Optimistically update UI with user message before streaming
-      setMessages((prev) => [...prev, userMessage]);
-
       const chatInput: ChatInput = {
-        // Send a cleaned history without non-serializable data
-        history: [...messages, userMessage].map((msg) => ({
+        history: messages.map((msg) => ({
           role: msg.role,
           content: msg.content,
         })),
@@ -177,6 +173,7 @@ export default function ChatPage() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
+          setIsLoading(false);
           break;
         }
 
@@ -207,14 +204,6 @@ export default function ChatPage() {
         title: 'Error',
         description: 'Sorry, something went wrong. Please try again.',
         variant: 'destructive',
-      });
-      // Remove placeholder on error
-      setMessages((prev) => {
-        const lastMessage = prev[prev.length - 1];
-        if (lastMessage?.role === 'model' && lastMessage.content === '') {
-          return prev.slice(0, -1);
-        }
-        return prev;
       });
     } finally {
       setIsLoading(false);
@@ -272,8 +261,8 @@ export default function ChatPage() {
             </div>
           </CardHeader>
           <CardContent className="flex-1 p-0 overflow-hidden">
-            <ScrollArea className="h-full p-6" ref={scrollAreaRef}>
-              <div className="space-y-6">
+            <ScrollArea className="h-full" viewportRef={scrollAreaRef}>
+              <div className="space-y-6 p-6">
                 {messages.length === 0 && !isLoading && (
                   <div className="text-center text-muted-foreground pt-10">
                     <p className="text-lg">
@@ -305,13 +294,6 @@ export default function ChatPage() {
                           : 'bg-muted'
                       }`}
                     >
-                      {message.content === '' && isLoading && (
-                        <div className="flex items-center space-x-1 p-2">
-                          <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                          <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                          <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
-                        </div>
-                      )}
                       <div
                         className="prose dark:prose-invert prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2"
                         dangerouslySetInnerHTML={{
