@@ -8,6 +8,7 @@ import {
   PlusCircle,
   Heart,
   MessageSquare,
+  Sparkles,
 } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
@@ -72,22 +73,13 @@ export function Header() {
             </>
           ) : (
             <div className="flex items-center gap-1">
+              <Link href="/chat">
+                <Button variant="outline" size="sm" className="h-9">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  AI Chat
+                </Button>
+              </Link>
               <TooltipProvider>
-                {/* AI Chatbot Button */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link href="/chat">
-                      <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                        <MessageSquare className="h-4 w-4" />
-                        <span className="sr-only">AI Chatbot</span>
-                      </Button>
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>AI Chatbot</p>
-                  </TooltipContent>
-                </Tooltip>
-
                 {/* Wishlist Button */}
                 <Tooltip>
                   <TooltipTrigger asChild>
