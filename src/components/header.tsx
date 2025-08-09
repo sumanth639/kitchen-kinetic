@@ -144,13 +144,13 @@ export function Header() {
                         <span>Wishlist</span>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <div className='flex items-center w-full'>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <div className="flex items-center w-full">
                         <Sun className="mr-2 h-4 w-4 dark:hidden" />
                         <Moon className="mr-2 h-4 w-4 hidden dark:inline-block" />
                         <span>Theme</span>
                         <div className="ml-auto">
-                           <ThemeToggle />
+                          <ThemeToggle />
                         </div>
                       </div>
                     </DropdownMenuItem>
@@ -163,15 +163,15 @@ export function Header() {
                 </DropdownMenu>
               ) : (
                 <>
-                <ThemeToggle />
-                <Button
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  className="h-9 px-4 border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/30"
-                >
-                  <Link href="/login">Login</Link>
-                </Button>
+                  <ThemeToggle />
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-4 border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/30"
+                  >
+                    <Link href="/login">Login</Link>
+                  </Button>
                 </>
               )}
             </div>
