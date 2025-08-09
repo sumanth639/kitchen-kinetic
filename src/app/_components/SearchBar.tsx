@@ -46,7 +46,7 @@ export function SearchBar({
         src="/hero-1.webp"
         alt="Hero background"
         fill
-        className="object-cover -z-10 scale-105 hover:scale-110 transition-transform duration-[20s] ease-out"
+        className="object-cover -z-10 scale-105 hover:scale-110 transition-transform duration-[20000ms] ease-out"
         priority
         sizes="100vw"
         data-ai-hint="food cooking"
