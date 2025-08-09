@@ -63,22 +63,21 @@ export default function ChatPage() {
     if (!input.trim() || isLoading) return;
 
     const userMessage: ChatMessage = { role: 'user', content: input };
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
+    setMessages((prev) => [...prev, userMessage]);
+    const currentPrompt = input;
     setInput('');
     setIsLoading(true);
 
     try {
       const chatInput: ChatInput = {
+        // Pass the message history, excluding the latest user message which is part of the prompt
         history: messages,
-        prompt: input,
+        prompt: currentPrompt,
       };
 
       const stream = await chatWithBot(chatInput);
       let modelResponse = '';
-
-      // Add a placeholder for the model's response
-      setMessages((prev) => [...prev, { role: 'model', content: '' }]);
+      let firstChunk = true;
 
       const reader = stream.getReader();
 
@@ -87,15 +86,26 @@ export default function ChatPage() {
         if (done) {
           break;
         }
+
         modelResponse += value;
-        // Update the last message (the model's response) with the new chunk
-        setMessages((prev) =>
-          prev.map((msg, index) =>
-            index === prev.length - 1
-              ? { ...msg, content: modelResponse }
-              : msg
-          )
-        );
+
+        if (firstChunk) {
+          // On the first chunk, replace the loading indicator with the new message
+          setMessages((prev) => [
+            ...prev,
+            { role: 'model', content: modelResponse },
+          ]);
+          firstChunk = false;
+        } else {
+          // On subsequent chunks, update the last message
+          setMessages((prev) =>
+            prev.map((msg, index) =>
+              index === prev.length - 1
+                ? { ...msg, content: modelResponse }
+                : msg
+            )
+          );
+        }
       }
     } catch (error) {
       console.error('Error during chat:', error);
@@ -150,22 +160,16 @@ export default function ChatPage() {
                         : 'bg-muted'
                     }`}
                   >
-                    {message.content === '' && message.role === 'model' ? (
-                      <div className="flex items-center space-x-1">
-                        <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                        <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                        <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
-                      </div>
-                    ) : (
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            message.role === 'user'
-                              ? message.content
-                              : DOMPurify.sanitize(markdownToHtml(message.content)),
-                        }}
-                      />
-                    )}
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          message.role === 'user'
+                            ? message.content
+                            : DOMPurify.sanitize(
+                                markdownToHtml(message.content)
+                              ),
+                      }}
+                    />
                   </div>
                   {message.role === 'user' && (
                     <Avatar>
@@ -174,6 +178,20 @@ export default function ChatPage() {
                   )}
                 </div>
               ))}
+              {isLoading && (
+                <div className="flex gap-3">
+                  <Avatar>
+                    <AvatarFallback>AI</AvatarFallback>
+                  </Avatar>
+                  <div className="rounded-lg px-4 py-2 max-w-[80%] bg-muted flex items-center">
+                    <div className="flex items-center space-x-1">
+                      <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                      <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                      <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
         </CardContent>
