@@ -36,19 +36,19 @@ const chatFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async ({ history, prompt }) => {
-    const chat = ai.getGenerator('googleai/gemini-1.5-flash-latest');
+    const chat = ai.getChat('googleai/gemini-1.5-flash-latest');
 
     const fullHistory = [
-      { role: 'system' as const, content: SYSTEM_PROMPT },
+      { role: 'system' as const, content: [{ text: SYSTEM_PROMPT }] },
       ...history.map((msg: ChatMessage) => ({
         role: msg.role,
-        content: msg.content,
+        content: [{ text: msg.content }],
       })),
     ];
 
     const { output } = await chat.generate({
       history: fullHistory,
-      prompt,
+      prompt: prompt,
     });
 
     return output.text;
