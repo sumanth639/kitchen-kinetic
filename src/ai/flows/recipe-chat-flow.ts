@@ -8,11 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import {
-  ChatInput,
-  ChatInputSchema,
-} from './recipe-chat-flow.types';
-
+import { ChatInput, ChatInputSchema } from './recipe-chat-flow.types';
 
 const SYSTEM_PROMPT = `You are an expert culinary assistant named "Kinetic Chef" for the Kitchen Kinetic app. 
 Your role is to help users with all things cooking. You are friendly, encouraging, and knowledgeable.
