@@ -45,8 +45,19 @@ export const chatFlow = ai.defineFlow(
       },
     });
 
-    // Return the stream of text chunks
-    return stream.text();
+    // Create a new stream that just contains the text chunks
+    const textStream = new ReadableStream({
+      async start(controller) {
+        for await (const chunk of stream) {
+          if (chunk.text) {
+            controller.enqueue(chunk.text);
+          }
+        }
+        controller.close();
+      },
+    });
+
+    return textStream;
   }
 );
 
@@ -59,5 +70,7 @@ export const chatFlow = ai.defineFlow(
 export async function chatWithBot(
   input: ChatInput
 ): Promise<ReadableStream<string>> {
-  return await chatFlow(input);
+  // We need to cast the result because the Genkit flow type output is a single
+  // string, but the implementation returns a stream.
+  return (await chatFlow(input)) as unknown as ReadableStream<string>;
 }
