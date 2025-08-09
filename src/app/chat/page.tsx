@@ -22,6 +22,9 @@ import DOMPurify from 'dompurify';
 // A simple markdown to HTML converter
 const markdownToHtml = (text: string) => {
   let html = text
+    .replace(/# (.*)/g, '<h1>$1</h1>')
+    .replace(/## (.*)/g, '<h2>$1</h2>')
+    .replace(/### (.*)/g, '<h3>$1</h3>')
     // Bold
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     // Italic
@@ -36,7 +39,9 @@ const markdownToHtml = (text: string) => {
   // Paragraphs
   html = html
     .split('\n\n')
-    .map((p) => (p.startsWith('<') ? p : `<p>${p}</p>`))
+    .map((p) =>
+      p.trim().startsWith('<') && p.trim().endsWith('>') ? p : `<p>${p}</p>`
+    )
     .join('');
 
   return html;
@@ -154,13 +159,14 @@ export default function ChatPage() {
                     </Avatar>
                   )}
                   <div
-                    className={`rounded-lg px-4 py-2 max-w-[80%] prose dark:prose-invert prose-p:m-0 prose-strong:text-foreground ${
+                    className={`rounded-lg px-4 py-2 max-w-[80%] ${
                       message.role === 'user'
-                        ? 'bg-primary text-primary-foreground prose-strong:text-primary-foreground'
+                        ? 'bg-primary text-primary-foreground'
                         : 'bg-muted'
                     }`}
                   >
                     <div
+                      className="prose dark:prose-invert prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2"
                       dangerouslySetInnerHTML={{
                         __html:
                           message.role === 'user'
@@ -178,7 +184,7 @@ export default function ChatPage() {
                   )}
                 </div>
               ))}
-              {isLoading && (
+              {isLoading && messages[messages.length - 1]?.role !== 'model' && (
                 <div className="flex gap-3">
                   <Avatar>
                     <AvatarFallback>AI</AvatarFallback>
