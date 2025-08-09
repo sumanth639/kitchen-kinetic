@@ -1,61 +1,63 @@
+// src/ai/flows/recipe-chat-flow.ts
+
 'use server';
 
 /**
- * @fileOverview A recipe and culinary assistant chatbot flow.
- *
- * - chatWithBot - A function that handles the conversation with the AI assistant.
+ * @fileOverview A server-side flow for handling chat with a recipe assistant AI.
+ * This file uses Genkit to create a streaming chat response.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { ChatInput, ChatInputSchema } from './recipe-chat-flow.types';
+import { ChatInput, ChatInputSchema, ChatMessage } from './chat-types';
 
-const SYSTEM_PROMPT = `You are an expert culinary assistant named "Kinetic Chef" for the Kitchen Kinetic app. 
-Your role is to help users with all things cooking. You are friendly, encouraging, and knowledgeable.
-
-You can:
-- Suggest recipes based on ingredients a user has.
-- Provide cooking tips and techniques.
-- Explain culinary terms.
-- Help with meal planning.
-- Answer questions about specific recipes.
-- If you are asked for a recipe, provide it in a structured format (Ingredients, Instructions).
-
-Keep your responses concise and easy to understand. Use markdown for formatting, especially for lists and recipes.
-Do not answer questions that are not related to food, cooking, or recipes. If asked, politely decline and steer the conversation back to cooking.
-`;
-
-const chatFlow = ai.defineFlow(
+/**
+ * Defines the main chat flow using Genkit.
+ * This flow is responsible for generating a response from the AI model based on the chat history.
+ * It's a streaming flow, so it returns chunks of text as they are generated.
+ */
+export const chatFlow = ai.defineFlow(
   {
     name: 'chatFlow',
     inputSchema: ChatInputSchema,
-    outputSchema: z.string(),
+    outputSchema: z.string(), // Each chunk of the stream is a string
   },
   async ({ history, prompt }) => {
-    const model = 'googleai/gemini-pro';
-    
-    const { stream } = ai.generateStream({
-      model: model,
-      prompt: prompt,
-      history: history,
-      system: SYSTEM_PROMPT,
-    });
+    const model = 'googleai/gemini-1.5-flash-latest';
 
-    const streamResult = new ReadableStream({
-      async pull(controller) {
-        for await (const chunk of stream) {
-          if (chunk.text) {
-            controller.enqueue(chunk.text);
-          }
-        }
-        controller.close();
+    const systemPrompt =
+      'You are a friendly and helpful recipe assistant. You can help users find recipes, suggest cooking ideas, and answer questions about cooking. Your name is Kinetic. Always try to be concise and helpful.';
+
+    // The history needs to be mapped to the format the model expects.
+    const fullHistory = history.map((msg) => ({
+      role: msg.role,
+      content: [{ text: msg.content }],
+    }));
+
+    // Add the new user prompt to the history
+    fullHistory.push({ role: 'user', content: [{ text: prompt }] });
+
+    const { stream } = await ai.generateStream({
+      model,
+      prompt: {
+        system: systemPrompt,
+        messages: fullHistory,
       },
     });
 
-    return streamResult as any;
+    // Return the stream of text chunks
+    return stream.text();
   }
 );
 
-export async function chatWithBot(input: ChatInput) {
+/**
+ * An exported async function that the client can call.
+ * This function invokes the Genkit flow and returns its streaming output.
+ * @param input The user's chat input, including history and the new prompt.
+ * @returns A ReadableStream of strings, representing the AI's response.
+ */
+export async function chatWithBot(
+  input: ChatInput
+): Promise<ReadableStream<string>> {
   return await chatFlow(input);
 }

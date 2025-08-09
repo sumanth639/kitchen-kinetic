@@ -1,178 +1,168 @@
+// src/app/chat/page.tsx
+
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { CornerDownLeft, Loader2, Bot, User, Circle } from 'lucide-react';
-
+import { useState, useRef, useEffect, FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Send, Sparkles } from 'lucide-react';
 import { chatWithBot } from '@/ai/flows/recipe-chat-flow';
-import { ChatMessage } from '@/ai/flows/recipe-chat-flow.types';
-import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ChatMessage, ChatInput } from '@/ai/flows/chat-types';
 
 export default function ChatPage() {
-  const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
-  const [isPending, setIsPending] = useState(false);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    // Scroll to the bottom when messages change
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
     }
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim() || isPending) return;
+    if (!input.trim() || isLoading) return;
 
-    setIsPending(true);
     const userMessage: ChatMessage = { role: 'user', content: input };
-    const newMessages: ChatMessage[] = [...messages, userMessage];
+    const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput('');
+    setIsLoading(true);
 
     try {
-      const stream = await chatWithBot({
+      const chatInput: ChatInput = {
         history: messages,
         prompt: input,
-      });
+      };
 
-      // Add the initial empty bot message
-      setMessages((prev) => [...prev, { role: 'model', content: '' }]);
+      const stream = await chatWithBot(chatInput);
+      let modelResponse = '';
+
+      setMessages((prev) => [
+        ...prev,
+        { role: 'model', content: '...' }, // Placeholder for typing effect
+      ]);
 
       const reader = stream.getReader();
       const decoder = new TextDecoder();
-      let botMessageContent = '';
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
-
-        botMessageContent += decoder.decode(value, { stream: true });
+        if (done) {
+          break;
+        }
+        modelResponse += decoder.decode(value, { stream: true });
         setMessages((prev) =>
-          prev.map((msg, i) =>
-            i === prev.length - 1
-              ? { ...msg, content: botMessageContent }
+          prev.map((msg, index) =>
+            index === newMessages.length
+              ? { ...msg, content: modelResponse }
               : msg
           )
         );
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to get a response from the assistant.',
-        variant: 'destructive',
-      });
-      // Remove the user message and the empty bot message on error
-       setMessages((prev) => prev.slice(0, prev.length -2));
+      console.error('Error during chat:', error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'model',
+          content: 'Sorry, something went wrong. Please try again.',
+        },
+      ]);
     } finally {
-      setIsPending(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <Card className="h-[calc(100vh-12rem)] flex flex-col">
+    <div className="container mx-auto max-w-2xl h-[calc(100vh-8rem)] flex items-center justify-center py-8">
+      <Card className="w-full h-full flex flex-col shadow-2xl">
         <CardHeader className="border-b">
           <CardTitle className="flex items-center gap-2">
-            <Bot />
-            Kinetic Chef Assistant
+            <Sparkles className="h-6 w-6 text-primary" />
+            <span>AI Recipe Assistant</span>
           </CardTitle>
         </CardHeader>
-        <CardContent ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6">
-          {messages.length === 0 && (
-            <div className="text-center text-muted-foreground">
-              <p>Ask me anything about cooking!</p>
-              <p className="text-xs">
-                e.g., "What can I make with chicken and broccoli?"
-              </p>
-            </div>
-          )}
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={cn(
-                'flex items-start gap-4',
-                message.role === 'user' ? 'justify-end' : 'justify-start'
+        <CardContent className="flex-1 p-0">
+          <ScrollArea className="h-full p-6" ref={scrollAreaRef}>
+            <div className="space-y-6">
+              {messages.length === 0 && (
+                <div className="text-center text-muted-foreground">
+                  <p>Ask me anything about recipes or cooking!</p>
+                  <p className="text-sm">
+                    For example: "How do I make pancakes?"
+                  </p>
+                </div>
               )}
-            >
-              {message.role === 'model' && (
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>
-                    <Bot className="h-5 w-5" />
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              <div
-                className={cn(
-                  'max-w-md rounded-lg p-3',
-                  message.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                )}
-              >
+              {messages.map((message, index) => (
                 <div
-                  className="prose dark:prose-invert"
-                  dangerouslySetInnerHTML={{ __html: message.content.replace(/\n/g, '<br />') }}
-                />
-              </div>
-              {message.role === 'user' && (
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>
-                    <User className="h-5 w-5" />
-                  </AvatarFallback>
-                </Avatar>
+                  key={index}
+                  className={`flex gap-3 ${
+                    message.role === 'user' ? 'justify-end' : ''
+                  }`}
+                >
+                  {message.role === 'model' && (
+                    <Avatar>
+                      <AvatarFallback>AI</AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div
+                    className={`rounded-lg px-4 py-2 max-w-[80%] whitespace-pre-wrap ${
+                      message.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    {message.content}
+                  </div>
+                  {message.role === 'user' && (
+                    <Avatar>
+                      <AvatarFallback>U</AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+              ))}
+              {isLoading && messages[messages.length - 1]?.role !== 'model' && (
+                <div className="flex gap-3">
+                  <Avatar>
+                    <AvatarFallback>AI</AvatarFallback>
+                  </Avatar>
+                  <div className="rounded-lg px-4 py-2 bg-muted animate-pulse">
+                    ...
+                  </div>
+                </div>
               )}
             </div>
-          ))}
-           {isPending && messages[messages.length - 1]?.role === 'user' && (
-             <div className="flex items-start gap-4 justify-start">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback>
-                  <Bot className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex items-center gap-1 bg-muted p-3 rounded-lg">
-                <Circle className="h-2 w-2 animate-pulse" />
-                <Circle className="h-2 w-2 animate-pulse [animation-delay:0.2s]" />
-                <Circle className="h-2 w-2 animate-pulse [animation-delay:0.4s]" />
-              </div>
-            </div>
-          )}
+          </ScrollArea>
         </CardContent>
-        <div className="border-t p-4">
-          <form onSubmit={handleSubmit} className="relative">
-            <Label htmlFor="chat-input" className="sr-only">
-              Enter your message
-            </Label>
+        <CardFooter className="border-t pt-6">
+          <form onSubmit={handleSubmit} className="flex w-full gap-2">
             <Input
-              id="chat-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask a culinary question..."
-              className="pr-16 h-12"
-              disabled={isPending}
+              placeholder="Type your message..."
+              disabled={isLoading}
             />
-            <Button
-              type="submit"
-              size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-12"
-              disabled={isPending || !input.trim()}
-            >
-              {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CornerDownLeft className="h-4 w-4" />
-              )}
-              <span className="sr-only">Send</span>
+            <Button type="submit" disabled={isLoading || !input.trim()}>
+              <Send className="h-4 w-4" />
             </Button>
           </form>
-        </div>
+        </CardFooter>
       </Card>
     </div>
   );
