@@ -161,22 +161,32 @@ export default function ChatPage() {
       // Save user message to Firestore
       await addMessageToChat(user.uid, currentChatId, userMessage);
 
-      // Optimistically update UI with user message
-      setMessages((prev) => [...prev, userMessage]);
-      // Add placeholder for model response
-      setMessages((prev) => [...prev, { role: 'model', content: '' }]);
+      // Optimistically update UI with user message before streaming
+      const newMessages = [...messages, userMessage];
+      setMessages(newMessages);
 
       const chatInput: ChatInput = {
-        // Send the history *before* the new user message
-        history: messages,
+        // Send a cleaned history without non-serializable data
+        history: newMessages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        })),
         prompt: currentInput,
       };
 
       const stream = await chatWithBot(chatInput);
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
       let modelResponse = '';
 
-      for await (const chunk of stream) {
-        modelResponse += chunk;
+      setMessages((prev) => [...prev, { role: 'model', content: '' }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        modelResponse += decoder.decode(value, { stream: true });
         setMessages((prev) =>
           prev.map((msg, index) =>
             index === prev.length - 1
@@ -199,7 +209,13 @@ export default function ChatPage() {
         variant: 'destructive',
       });
       // Remove placeholder on error
-      setMessages((prev) => prev.slice(0, -1));
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage?.role === 'model' && lastMessage.content === '') {
+          return prev.slice(0, -1);
+        }
+        return prev;
+      });
     } finally {
       setIsLoading(false);
     }
