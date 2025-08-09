@@ -8,9 +8,8 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
-import { ChatInput, ChatInputSchema, ChatMessage } from './chat-types';
-import { Message, generate } from '@genkit-ai/flow';
+import { Message } from '@genkit-ai/flow';
+import { ChatInput } from './chat-types';
 
 /**
  * An exported async function that the client can call.
@@ -37,10 +36,8 @@ export async function chatWithBot(
 
   const { stream } = await ai.generateStream({
     model,
-    prompt: {
-      system: systemPrompt,
-      messages: history,
-    },
+    system: systemPrompt,
+    messages: history,
   });
 
   // Create a new stream that just contains the text chunks
