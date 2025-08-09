@@ -144,16 +144,14 @@ export function Header() {
                         <span>Wishlist</span>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <div className="flex items-center w-full">
-                        <Sun className="mr-2 h-4 w-4 dark:hidden" />
-                        <Moon className="mr-2 h-4 w-4 hidden dark:inline-block" />
-                        <span>Theme</span>
-                        <div className="ml-auto">
-                          <ThemeToggle />
-                        </div>
+                    <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                      <Sun className="mr-2 h-4 w-4 dark:hidden" />
+                      <Moon className="mr-2 h-4 w-4 hidden dark:inline-block" />
+                      <span>Theme</span>
+                      <div className="ml-auto">
+                        <ThemeToggle />
                       </div>
-                    </DropdownMenuItem>
+                    </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
