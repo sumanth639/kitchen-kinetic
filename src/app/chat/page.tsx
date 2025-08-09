@@ -163,63 +163,54 @@ export default function ChatPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || isLoading || !user) return;
-  
+
     const currentInput = input;
     setInput('');
     setIsLoading(true);
-  
+
     let currentChatId = activeChatId;
-  
+
     try {
       // If there's no active chat, create a new one.
       if (!currentChatId) {
         currentChatId = await createChatSession(user.uid, currentInput);
         setActiveChatId(currentChatId);
       }
-  
+
       const userMessage: ChatMessage = {
         role: 'user',
         content: currentInput,
       };
-  
+
+      // Create a clean history for the AI, stripping out any complex objects
+      const chatHistoryForAI = messages.map(({ role, content }) => ({
+        role,
+        content,
+      }));
+
       // Add user message to local state immediately and save to Firestore
       setMessages((prev) => [...prev, userMessage]);
       await addMessageToChat(user.uid, currentChatId, userMessage);
-  
-      // Create a clean history for the AI, without complex objects
-      const chatHistoryForAI = messages.map(
-        (msg) => ({
-          role: msg.role,
-          content: msg.content,
-        })
-      );
-  
+
       const chatInput: ChatInput = {
         history: chatHistoryForAI,
         prompt: currentInput,
       };
-  
+
       const stream = await chatWithBot(chatInput);
       const reader = stream.getReader();
       let modelResponse = '';
-      let isFirstChunk = true;
-  
+
       // Add a placeholder for the AI response in the UI
-      setMessages((prev) => [
-        ...prev,
-        { role: 'model', content: '' },
-      ]);
-  
+      setMessages((prev) => [...prev, { role: 'model', content: '' }]);
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
           setIsLoading(false);
           break;
         }
-  
         modelResponse += value;
-  
-        // Update the last message (the AI's response) in the UI
         setMessages((prev) =>
           prev.map((msg, index) =>
             index === prev.length - 1
@@ -228,14 +219,14 @@ export default function ChatPage() {
           )
         );
       }
-  
+
       // Save the final model response to Firestore
       const finalModelMessage: ChatMessage = {
         role: 'model',
         content: modelResponse,
       };
       await addMessageToChat(user.uid, currentChatId, finalModelMessage);
-  
+
       // Update the final message in the local state to ensure consistency
       setMessages((prev) =>
         prev.map((msg, index) =>
@@ -250,11 +241,14 @@ export default function ChatPage() {
         variant: 'destructive',
       });
       // Remove the placeholder AI message if an error occurs
-      setMessages((prev) => prev.filter((msg, index) => index !== prev.length - 1 || msg.role !== 'model'));
+      setMessages((prev) =>
+        prev.filter(
+          (msg, index) => index !== prev.length - 1 || msg.role !== 'model'
+        )
+      );
       setIsLoading(false);
     }
   };
-
 
   if (authLoading || !user) {
     return (
@@ -341,7 +335,7 @@ export default function ChatPage() {
                     <div
                       className={`group relative rounded-lg px-4 py-2 max-w-[80%] ${
                         message.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
+                          ? 'bg-primary text-white'
                           : 'bg-muted'
                       }`}
                     >
@@ -369,7 +363,7 @@ export default function ChatPage() {
                     )}
                   </div>
                 ))}
-                 {isLoading && (
+                {isLoading && (
                   <div className="flex gap-3">
                     <Avatar>
                       <AvatarFallback>AI</AvatarFallback>
