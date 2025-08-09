@@ -10,7 +10,6 @@
 import { ai } from '@/ai/genkit';
 import { Message } from '@genkit-ai/flow';
 import { ChatInput } from './chat-types';
-import { addMessageToChat } from '@/lib/firestore-utils';
 
 /**
  * An exported async function that the client can call.
@@ -44,13 +43,10 @@ export async function chatWithBot(
   // Create a new stream that just contains the text chunks
   const textStream = new ReadableStream({
     async start(controller) {
-      const reader = stream.getReader();
       try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          if (value.text) {
-            controller.enqueue(value.text);
+        for await (const chunk of stream) {
+          if (chunk.text) {
+            controller.enqueue(chunk.text);
           }
         }
         controller.close();
