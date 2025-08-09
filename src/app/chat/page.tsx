@@ -31,6 +31,7 @@ import {
   addMessageToChat,
   deleteChatSession,
   updateChatSessionTitle,
+  updateLastMessageInChat,
 } from '@/lib/firestore-utils';
 import { ChatHistory } from './_components/ChatHistory';
 import { useToast } from '@/hooks/use-toast';
@@ -107,7 +108,9 @@ export default function ChatPage() {
     const unsubscribe = subscribeToMessages(
       user.uid,
       activeChatId,
-      setMessages,
+      (newMessages) => {
+        setMessages(newMessages);
+      },
       (error) => {
         toast({
           title: 'Error loading messages',
@@ -169,6 +172,7 @@ export default function ChatPage() {
     setIsLoading(true);
 
     let currentChatId = activeChatId;
+    let modelMessageId: string | undefined;
 
     try {
       // If there's no active chat, create a new one.
@@ -188,37 +192,39 @@ export default function ChatPage() {
         content,
       }));
 
-      // Add user message to local state immediately and save to Firestore
-      setMessages((prev) => [...prev, userMessage]);
+      // Add user message and save to Firestore
       await addMessageToChat(user.uid, currentChatId, userMessage);
+      setMessages((prev) => [...prev, userMessage]);
 
       const chatInput: ChatInput = {
         history: chatHistoryForAI,
         prompt: currentInput,
       };
 
+      // Add a placeholder for the AI response and get its ID
+      const modelPlaceholder: ChatMessage = { role: 'model', content: '' };
+      modelMessageId = await addMessageToChat(
+        user.uid,
+        currentChatId,
+        modelPlaceholder
+      );
+      setMessages((prev) => [...prev, modelPlaceholder]);
+
       const stream = await chatWithBot(chatInput);
       const reader = stream.getReader();
       const decoder = new TextDecoder();
       let modelResponse = '';
 
-      // Add a placeholder for the AI response in the UI
-      setMessages((prev) => [...prev, { role: 'model', content: '' }]);
-
       const read = async () => {
         const { done, value } = await reader.read();
         if (done) {
           setIsLoading(false);
-          // Save the final model response to Firestore
-          const finalModelMessage: ChatMessage = {
-            role: 'model',
-            content: modelResponse,
-          };
-          await addMessageToChat(user.uid, currentChatId!, finalModelMessage);
+          // Final update to the message in Firestore is handled by updateLastMessageInChat
           return;
         }
         const chunk = decoder.decode(value, { stream: true });
         modelResponse += chunk;
+
         setMessages((prev) =>
           prev.map((msg, index) =>
             index === prev.length - 1
@@ -226,6 +232,15 @@ export default function ChatPage() {
               : msg
           )
         );
+
+        if (modelMessageId) {
+          await updateLastMessageInChat(
+            user.uid,
+            currentChatId!,
+            modelMessageId,
+            modelResponse
+          );
+        }
         read();
       };
       read();
@@ -236,13 +251,6 @@ export default function ChatPage() {
         description: 'Sorry, something went wrong. Please try again.',
         variant: 'destructive',
       });
-      // Remove the placeholder AI message if an error occurs
-      setMessages((prev) =>
-        prev.filter(
-          (msg, index) =>
-            index !== prev.length - 1 || msg.role !== 'model' || msg.content
-        )
-      );
       setIsLoading(false);
     }
   };

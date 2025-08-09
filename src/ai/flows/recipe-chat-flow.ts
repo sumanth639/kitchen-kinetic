@@ -15,11 +15,11 @@ import { ChatInput } from './chat-types';
  * An exported async function that the client can call.
  * This function invokes the Genkit flow and returns its streaming output.
  * @param input The user's chat input, including history and the new prompt.
- * @returns A ReadableStream of strings, representing the AI's response.
+ * @returns A ReadableStream of Uint8Array, representing the AI's response chunks.
  */
 export async function chatWithBot(
   input: ChatInput
-): Promise<ReadableStream<string>> {
+): Promise<ReadableStream<Uint8Array>> {
   const model = 'googleai/gemini-1.5-flash-latest';
 
   const systemPrompt =
@@ -40,13 +40,14 @@ export async function chatWithBot(
     messages: history,
   });
 
-  // Create a new stream that just contains the text chunks
+  // Create a new stream that encodes text chunks into Uint8Array
   const textStream = new ReadableStream({
     async start(controller) {
+      const encoder = new TextEncoder();
       try {
         for await (const chunk of stream) {
           if (chunk.text) {
-            controller.enqueue(chunk.text);
+            controller.enqueue(encoder.encode(chunk.text));
           }
         }
         controller.close();

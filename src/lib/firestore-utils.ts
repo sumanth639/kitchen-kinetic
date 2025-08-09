@@ -202,7 +202,10 @@ export const subscribeToMessages = (
   return onSnapshot(
     q,
     (snapshot) => {
-      const messages = snapshot.docs.map((doc) => doc.data() as ChatMessage);
+      const messages = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as (ChatMessage & { id: string })[];
       callback(messages);
     },
     (error) => {
@@ -216,7 +219,7 @@ export const addMessageToChat = async (
   userId: string,
   chatId: string,
   message: ChatMessage
-) => {
+): Promise<string> => {
   return safeFirestoreOperation(async () => {
     const messagesRef = collection(
       db,
@@ -226,8 +229,32 @@ export const addMessageToChat = async (
       chatId,
       'messages'
     );
-    await addDoc(messagesRef, { ...message, timestamp: serverTimestamp() });
+    const docRef = await addDoc(messagesRef, {
+      ...message,
+      timestamp: serverTimestamp(),
+    });
+    return docRef.id;
   }, 'add message to chat');
+};
+
+export const updateLastMessageInChat = async (
+  userId: string,
+  chatId: string,
+  messageId: string,
+  content: string
+) => {
+  return safeFirestoreOperation(async () => {
+    const messageRef = doc(
+      db,
+      'users',
+      userId,
+      'chats',
+      chatId,
+      'messages',
+      messageId
+    );
+    await updateDoc(messageRef, { content });
+  }, 'update last message in chat');
 };
 
 export const updateChatSessionTitle = async (
