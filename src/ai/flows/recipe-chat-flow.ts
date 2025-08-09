@@ -32,7 +32,7 @@ const chatFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async ({ history, prompt }) => {
-    const model = 'googleai/gemini-1.5-flash-latest';
+    const model = 'googleai/gemini-pro';
     
     const { stream } = ai.generateStream({
       model: model,

@@ -42,13 +42,12 @@ export default function ChatPage() {
         prompt: input,
       });
 
+      // Add the initial empty bot message
+      setMessages((prev) => [...prev, { role: 'model', content: '' }]);
+
       const reader = stream.getReader();
       const decoder = new TextDecoder();
       let botMessageContent = '';
-      let botMessage: ChatMessage = { role: 'model', content: '' };
-
-      // Add the initial empty bot message
-      setMessages((prev) => [...prev, botMessage]);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -69,8 +68,8 @@ export default function ChatPage() {
         description: 'Failed to get a response from the assistant.',
         variant: 'destructive',
       });
-      // Remove the empty bot message on error
-      setMessages((prev) => prev.slice(0, prev.length -1));
+      // Remove the user message and the empty bot message on error
+       setMessages((prev) => prev.slice(0, prev.length -2));
     } finally {
       setIsPending(false);
     }
