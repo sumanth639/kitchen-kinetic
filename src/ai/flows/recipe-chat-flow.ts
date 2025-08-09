@@ -33,22 +33,36 @@ const chatFlow = ai.defineFlow(
   {
     name: 'chatFlow',
     inputSchema: ChatInputSchema,
-    outputSchema: z.string(),
+    outputSchema: z.string().stream(),
   },
   async ({ history, prompt }) => {
     const model = 'googleai/gemini-1.5-flash-latest';
     
-    const response = await ai.generate({
+    const { stream } = await ai.generate({
       model: model,
       prompt: prompt,
       history: history,
       system: SYSTEM_PROMPT,
+      stream: true,
     });
 
-    return response.text;
+    let text = '';
+    const streamResult = new ReadableStream({
+      async pull(controller) {
+        for await (const chunk of stream) {
+          if (chunk.text) {
+            text += chunk.text;
+            controller.enqueue(chunk.text);
+          }
+        }
+        controller.close();
+      },
+    });
+
+    return streamResult;
   }
 );
 
-export async function chatWithBot(input: ChatInput): Promise<string> {
+export async function chatWithBot(input: ChatInput) {
   return await chatFlow(input);
 }

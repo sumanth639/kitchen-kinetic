@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState, useRef, useEffect } from 'react';
 import { CornerDownLeft, Loader2, Bot, User, Circle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -12,43 +11,68 @@ import { useToast } from '@/hooks/use-toast';
 import { chatWithBot } from '@/ai/flows/recipe-chat-flow';
 import { ChatMessage } from '@/ai/flows/recipe-chat-flow.types';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 export default function ChatPage() {
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
+  const [isPending, setIsPending] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const { mutate: sendMessage, isPending } = useMutation({
-    mutationFn: async (prompt: string) => {
-      const userMessage: ChatMessage = { role: 'user', content: prompt };
-      const newMessages: ChatMessage[] = [...messages, userMessage];
-      setMessages(newMessages);
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
-      const response = await chatWithBot({
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim() || isPending) return;
+
+    setIsPending(true);
+    const userMessage: ChatMessage = { role: 'user', content: input };
+    const newMessages: ChatMessage[] = [...messages, userMessage];
+    setMessages(newMessages);
+    setInput('');
+
+    try {
+      const stream = await chatWithBot({
         history: messages,
-        prompt: prompt,
+        prompt: input,
       });
-      return response;
-    },
-    onSuccess: (response) => {
-      const botMessage: ChatMessage = { role: 'model', content: response };
+
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
+      let botMessageContent = '';
+      let botMessage: ChatMessage = { role: 'model', content: '' };
+
       setMessages((prev) => [...prev, botMessage]);
-    },
-    onError: (error) => {
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        botMessageContent += decoder.decode(value, { stream: true });
+        setMessages((prev) =>
+          prev.map((msg, i) =>
+            i === prev.length - 1
+              ? { ...msg, content: botMessageContent }
+              : msg
+          )
+        );
+      }
+    } catch (error) {
       toast({
         title: 'Error',
         description: 'Failed to get a response from the assistant.',
         variant: 'destructive',
       });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!input.trim() || isPending) return;
-    sendMessage(input);
-    setInput('');
+      // Remove the empty bot message on error
+      setMessages((prev) => prev.slice(0, prev.length -1));
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -60,7 +84,7 @@ export default function ChatPage() {
             Kinetic Chef Assistant
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto p-6 space-y-6">
+        <CardContent ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6">
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground">
               <p>Ask me anything about cooking!</p>
@@ -106,8 +130,8 @@ export default function ChatPage() {
               )}
             </div>
           ))}
-          {isPending && (
-            <div className="flex items-center gap-2 text-muted-foreground">
+          {isPending && messages[messages.length-1]?.role !== 'model' && (
+             <div className="flex items-center gap-2 text-muted-foreground">
               <Avatar className="h-8 w-8">
                 <AvatarFallback>
                   <Bot className="h-5 w-5" />
