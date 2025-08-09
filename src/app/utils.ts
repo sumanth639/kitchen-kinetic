@@ -10,7 +10,6 @@ import {
   QueryConstraint,
 } from 'firebase/firestore';
 import { RecipeListItem } from './types';
-import Fuse from 'fuse.js';
 
 const API_KEY = process.env.NEXT_PUBLIC_FORKIFY_API_KEY;
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
@@ -85,19 +84,7 @@ export async function fetchRecipes(
 
   let finalRecipes = Array.from(combinedRecipesMap.values());
 
-  if (queryTerm && finalRecipes.length > 0) {
-    const fuseOptions = {
-      keys: ['title', 'publisher'],
-
-      threshold: 0.3,
-      includeScore: true,
-    };
-    const fuse = new Fuse(finalRecipes, fuseOptions);
-
-    const searchResults = fuse.search(queryTerm);
-
-    finalRecipes = searchResults.map((result) => result.item);
-  } else if (!queryTerm) {
+  if (!queryTerm) {
     finalRecipes.sort((a, b) => {
       const timeA = a.createdAt?.toMillis() ?? 0;
       const timeB = b.createdAt?.toMillis() ?? 0;
