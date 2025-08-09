@@ -10,56 +10,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { ChatInput, ChatInputSchema, ChatMessage } from './chat-types';
-
-/**
- * Defines the main chat flow using Genkit.
- * This flow is responsible for generating a response from the AI model based on the chat history.
- * It's a streaming flow, so it returns chunks of text as they are generated.
- */
-export const chatFlow = ai.defineFlow(
-  {
-    name: 'chatFlow',
-    inputSchema: ChatInputSchema,
-    outputSchema: z.string(), // Each chunk of the stream is a string
-  },
-  async ({ history, prompt }) => {
-    const model = 'googleai/gemini-1.5-flash-latest';
-
-    const systemPrompt =
-      'You are a friendly and helpful recipe assistant. You can help users find recipes, suggest cooking ideas, and answer questions about cooking. Your name is Kinetic. Always try to be concise and helpful.';
-
-    // The history needs to be mapped to the format the model expects.
-    const fullHistory = history.map((msg) => ({
-      role: msg.role,
-      content: [{ text: msg.content }],
-    }));
-
-    // Add the new user prompt to the history
-    fullHistory.push({ role: 'user', content: [{ text: prompt }] });
-
-    const { stream } = await ai.generateStream({
-      model,
-      prompt: {
-        system: systemPrompt,
-        messages: fullHistory,
-      },
-    });
-
-    // Create a new stream that just contains the text chunks
-    const textStream = new ReadableStream({
-      async start(controller) {
-        for await (const chunk of stream) {
-          if (chunk.text) {
-            controller.enqueue(chunk.text);
-          }
-        }
-        controller.close();
-      },
-    });
-
-    return textStream;
-  }
-);
+import { Message, generate } from '@genkit-ai/flow';
 
 /**
  * An exported async function that the client can call.
@@ -70,7 +21,39 @@ export const chatFlow = ai.defineFlow(
 export async function chatWithBot(
   input: ChatInput
 ): Promise<ReadableStream<string>> {
-  // We need to cast the result because the Genkit flow type output is a single
-  // string, but the implementation returns a stream.
-  return (await chatFlow(input)) as unknown as ReadableStream<string>;
+  const model = 'googleai/gemini-1.5-flash-latest';
+
+  const systemPrompt =
+    'You are a friendly and helpful recipe assistant. You can help users find recipes, suggest cooking ideas, and answer questions about cooking. Your name is Kinetic. Always try to be concise and helpful.';
+
+  // Map the chat history to the format expected by the model.
+  const history: Message[] = input.history.map((msg) => ({
+    role: msg.role,
+    content: [{ text: msg.content }],
+  }));
+
+  // Add the new user prompt to the history.
+  history.push({ role: 'user', content: [{ text: input.prompt }] });
+
+  const { stream } = await ai.generateStream({
+    model,
+    prompt: {
+      system: systemPrompt,
+      messages: history,
+    },
+  });
+
+  // Create a new stream that just contains the text chunks
+  const textStream = new ReadableStream({
+    async start(controller) {
+      for await (const chunk of stream) {
+        if (chunk.text) {
+          controller.enqueue(chunk.text);
+        }
+      }
+      controller.close();
+    },
+  });
+
+  return textStream;
 }
