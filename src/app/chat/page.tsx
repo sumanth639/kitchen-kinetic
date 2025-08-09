@@ -53,6 +53,27 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
+  // Load messages from localStorage on initial render
+  useEffect(() => {
+    try {
+      const savedMessages = localStorage.getItem('chatHistory');
+      if (savedMessages) {
+        setMessages(JSON.parse(savedMessages));
+      }
+    } catch (error) {
+      console.error('Failed to parse chat history from localStorage', error);
+    }
+  }, []);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('chatHistory', JSON.stringify(messages));
+    } catch (error) {
+      console.error('Failed to save chat history to localStorage', error);
+    }
+  }, [messages]);
+
   useEffect(() => {
     // Scroll to the bottom when messages change
     if (scrollAreaRef.current) {
