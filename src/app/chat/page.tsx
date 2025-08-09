@@ -1,3 +1,5 @@
+// src/app/chat/page.tsx
+
 'use client';
 
 import { useState, useRef, useEffect, FormEvent } from 'react';
@@ -24,12 +26,6 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 
 import { chatWithBot } from '@/ai/flows/recipe-chat-flow';
 import { ChatMessage, ChatInput } from '@/ai/flows/chat-types';
@@ -47,11 +43,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 // A simple markdown to HTML converter
 const markdownToHtml = (text: string) => {
   let html = text
-    .replace(/# (.*)/g, '<h1>$1</h1>')
-    .replace(/## (.*)/g, '<h2>$1</h2>')
-    .replace(/### (.*)/g, '<h3>$1</h3>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/(\s)\*(.*?)\*(\s)/g, '$1<em>$2</em>$3')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/^\s*[\*-]\s(.*)/gm, '<ul><li>$1</li></ul>')
     .replace(/<\/ul>\n<ul>/g, '\n')
     .replace(/^\s*\d+\.\s(.*)/gm, '<ol><li>$1</li></ol>')
@@ -162,12 +158,11 @@ export default function ChatPage() {
       await addMessageToChat(user.uid, currentChatId, userMessage);
 
       // Optimistically update UI with user message before streaming
-      const newMessages = [...messages, userMessage];
-      setMessages(newMessages);
+      setMessages((prev) => [...prev, userMessage]);
 
       const chatInput: ChatInput = {
         // Send a cleaned history without non-serializable data
-        history: newMessages.map((msg) => ({
+        history: [...messages, userMessage].map((msg) => ({
           role: msg.role,
           content: msg.content,
         })),
@@ -176,24 +171,29 @@ export default function ChatPage() {
 
       const stream = await chatWithBot(chatInput);
       const reader = stream.getReader();
-      const decoder = new TextDecoder();
       let modelResponse = '';
-
-      setMessages((prev) => [...prev, { role: 'model', content: '' }]);
+      let isFirstChunk = true;
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
           break;
         }
-        modelResponse += decoder.decode(value, { stream: true });
-        setMessages((prev) =>
-          prev.map((msg, index) =>
-            index === prev.length - 1
-              ? { ...msg, content: modelResponse }
-              : msg
-          )
-        );
+
+        modelResponse += value;
+        
+        if (isFirstChunk) {
+           setMessages((prev) => [...prev, { role: 'model', content: modelResponse }]);
+           isFirstChunk = false;
+        } else {
+            setMessages((prev) =>
+              prev.map((msg, index) =>
+                index === prev.length - 1
+                  ? { ...msg, content: modelResponse }
+                  : msg
+              )
+            );
+        }
       }
 
       // Save the final model response to Firestore
