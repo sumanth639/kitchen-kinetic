@@ -13,6 +13,7 @@ import {
   ChatInputSchema,
   ChatMessage,
 } from './recipe-chat-flow.types';
+import { content, role } from 'genkit/experimental/dotprompt';
 
 const SYSTEM_PROMPT = `You are an expert culinary assistant named "Kinetic Chef" for the Kitchen Kinetic app. 
 Your role is to help users with all things cooking. You are friendly, encouraging, and knowledgeable.
@@ -36,15 +37,18 @@ const chatFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async ({ history, prompt }) => {
-    const chat = ai.getChat('googleai/gemini-1.5-flash-latest');
+    const chat = ai.getChat('googleai/gemini-1.5-flash-latest', {
+      system: SYSTEM_PROMPT,
+    });
 
-    const chatHistory = history.map((msg: ChatMessage) => ({
-      role: msg.role,
-      content: [{ text: msg.content }],
-    }));
+    const chatHistory = history.map((msg) => {
+      return {
+        role: msg.role,
+        content: [{ text: msg.content }],
+      };
+    });
 
     const { output } = await chat.generate({
-      system: SYSTEM_PROMPT,
       history: chatHistory,
       prompt: prompt,
     });
