@@ -15,6 +15,7 @@ import {
   serverTimestamp,
   writeBatch,
   updateDoc,
+  getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { ChatMessage } from '@/ai/flows/chat-types';
