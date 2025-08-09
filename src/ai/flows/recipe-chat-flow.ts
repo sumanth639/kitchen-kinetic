@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -29,25 +30,22 @@ const chatFlow = ai.defineFlow(
   {
     name: 'chatFlow',
     inputSchema: ChatInputSchema,
-    outputSchema: z.string().stream(),
+    outputSchema: z.string(),
   },
   async ({ history, prompt }) => {
     const model = 'googleai/gemini-1.5-flash-latest';
     
-    const { stream } = await ai.generate({
+    const { stream, response } = ai.generate({
       model: model,
       prompt: prompt,
       history: history,
       system: SYSTEM_PROMPT,
-      stream: true,
     });
 
-    let text = '';
     const streamResult = new ReadableStream({
       async pull(controller) {
         for await (const chunk of stream) {
           if (chunk.text) {
-            text += chunk.text;
             controller.enqueue(chunk.text);
           }
         }
@@ -55,7 +53,7 @@ const chatFlow = ai.defineFlow(
       },
     });
 
-    return streamResult;
+    return streamResult as any;
   }
 );
 
