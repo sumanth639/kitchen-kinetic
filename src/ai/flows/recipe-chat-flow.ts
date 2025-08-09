@@ -10,6 +10,7 @@
 import { ai } from '@/ai/genkit';
 import { Message } from '@genkit-ai/flow';
 import { ChatInput } from './chat-types';
+import { addMessageToChat } from '@/lib/firestore-utils';
 
 /**
  * An exported async function that the client can call.
@@ -18,7 +19,9 @@ import { ChatInput } from './chat-types';
  * @returns A ReadableStream of strings, representing the AI's response.
  */
 export async function chatWithBot(
-  input: ChatInput
+  input: ChatInput,
+  userId: string,
+  chatId: string
 ): Promise<ReadableStream<string>> {
   const model = 'googleai/gemini-1.5-flash-latest';
 
@@ -34,21 +37,65 @@ export async function chatWithBot(
   // Add the new user prompt to the history.
   history.push({ role: 'user', content: [{ text: input.prompt }] });
 
+  // Save the user's message to Firestore
+  await addMessageToChat(userId, chatId, {
+    role: 'user',
+    content: input.prompt,
+  });
+
   const { stream } = await ai.generateStream({
     model,
     system: systemPrompt,
     messages: history,
   });
 
+  // Create a new stream that saves the model's response and also passes it through
+  const passthroughStream = new TransformStream({
+    async transform(chunk, controller) {
+      controller.enqueue(chunk);
+    },
+    async flush(controller) {
+      controller.terminate();
+    },
+  });
+
+  const reader = stream.getReader();
+  const writer = passthroughStream.writable.getWriter();
+  let modelResponse = '';
+
+  (async () => {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        // Save the full model response to Firestore
+        await addMessageToChat(userId, chatId, {
+          role: 'model',
+          content: modelResponse,
+        });
+        writer.close();
+        break;
+      }
+      modelResponse += value.text;
+      writer.write(value);
+    }
+  })();
+
   // Create a new stream that just contains the text chunks
   const textStream = new ReadableStream({
     async start(controller) {
-      for await (const chunk of stream) {
-        if (chunk.text) {
-          controller.enqueue(chunk.text);
+      const reader = passthroughStream.readable.getReader();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value.text) {
+            controller.enqueue(value.text);
+          }
         }
+        controller.close();
+      } catch (e) {
+        controller.error(e);
       }
-      controller.close();
     },
   });
 

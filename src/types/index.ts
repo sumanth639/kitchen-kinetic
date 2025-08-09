@@ -62,3 +62,13 @@ export interface RecipeActionsProps {
 export interface RecipeIngredientsProps {
   ingredients: Ingredient[];
 }
+
+export interface ChatSession {
+  id: string;
+  title: string;
+  createdAt: {
+    seconds: number;
+    nanoseconds: number;
+  };
+  userId: string;
+}

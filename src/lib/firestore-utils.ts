@@ -11,8 +11,11 @@ import {
   DocumentReference,
   CollectionReference,
   FirestoreError,
+  addDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { ChatMessage } from '@/ai/flows/chat-types';
 
 // Utility function to handle Firestore errors
 export const handleFirestoreError = (error: any, operation: string) => {
@@ -133,4 +136,79 @@ export const deleteUserRecipe = async (userId: string, recipeId: string) => {
 
     await deleteDoc(recipeRef);
   }, 'delete user recipe');
+};
+
+// Chat History Operations
+export const createChatSession = async (
+  userId: string,
+  firstMessage: string
+) => {
+  return safeFirestoreOperation(async () => {
+    const chatsRef = collection(db, 'users', userId, 'chats');
+    const newChatSession = await addDoc(chatsRef, {
+      title: firstMessage.substring(0, 40), // Use first part of message as title
+      createdAt: serverTimestamp(),
+      userId: userId,
+    });
+    return newChatSession.id;
+  }, 'create chat session');
+};
+
+export const subscribeToChatSessions = (
+  userId: string,
+  callback: (sessions: any[]) => void,
+  onError: (error: Error) => void
+) => {
+  const sessionsRef = collection(db, 'users', userId, 'chats');
+  const q = query(sessionsRef, orderBy('createdAt', 'desc'));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const sessions = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      callback(sessions);
+    },
+    (error) => {
+      console.error('Chat sessions subscription error:', error);
+      onError(
+        new Error('Failed to load chat sessions. Please refresh the page.')
+      );
+    }
+  );
+};
+
+export const subscribeToMessages = (
+  userId: string,
+  chatId: string,
+  callback: (messages: ChatMessage[]) => void,
+  onError: (error: Error) => void
+) => {
+  const messagesRef = collection(db, 'users', userId, 'chats', chatId, 'messages');
+  const q = query(messagesRef, orderBy('timestamp', 'asc'));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const messages = snapshot.docs.map((doc) => doc.data() as ChatMessage);
+      callback(messages);
+    },
+    (error) => {
+      console.error('Messages subscription error:', error);
+      onError(new Error('Failed to load messages. Please refresh the page.'));
+    }
+  );
+};
+
+export const addMessageToChat = async (
+  userId: string,
+  chatId: string,
+  message: ChatMessage
+) => {
+  return safeFirestoreOperation(async () => {
+    const messagesRef = collection(db, 'users', userId, 'chats', chatId, 'messages');
+    await addDoc(messagesRef, { ...message, timestamp: serverTimestamp() });
+  }, 'add message to chat');
 };
