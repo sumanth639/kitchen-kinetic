@@ -34,7 +34,7 @@ const chatFlow = ai.defineFlow(
   async ({ history, prompt }) => {
     const model = 'googleai/gemini-1.5-flash-latest';
     
-    const { stream, response } = ai.generate({
+    const { stream } = ai.generateStream({
       model: model,
       prompt: prompt,
       history: history,
