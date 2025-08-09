@@ -13,6 +13,8 @@ import {
   FirestoreError,
   addDoc,
   serverTimestamp,
+  writeBatch,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { ChatMessage } from '@/ai/flows/chat-types';
@@ -186,7 +188,14 @@ export const subscribeToMessages = (
   callback: (messages: ChatMessage[]) => void,
   onError: (error: Error) => void
 ) => {
-  const messagesRef = collection(db, 'users', userId, 'chats', chatId, 'messages');
+  const messagesRef = collection(
+    db,
+    'users',
+    userId,
+    'chats',
+    chatId,
+    'messages'
+  );
   const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
   return onSnapshot(
@@ -208,7 +217,41 @@ export const addMessageToChat = async (
   message: ChatMessage
 ) => {
   return safeFirestoreOperation(async () => {
-    const messagesRef = collection(db, 'users', userId, 'chats', chatId, 'messages');
+    const messagesRef = collection(
+      db,
+      'users',
+      userId,
+      'chats',
+      chatId,
+      'messages'
+    );
     await addDoc(messagesRef, { ...message, timestamp: serverTimestamp() });
   }, 'add message to chat');
+};
+
+export const updateChatSessionTitle = async (
+  userId: string,
+  chatId: string,
+  newTitle: string
+) => {
+  return safeFirestoreOperation(async () => {
+    const chatRef = doc(db, 'users', userId, 'chats', chatId);
+    await updateDoc(chatRef, { title: newTitle });
+  }, 'update chat title');
+};
+
+export const deleteChatSession = async (userId: string, chatId: string) => {
+  return safeFirestoreOperation(async () => {
+    const chatRef = doc(db, 'users', userId, 'chats', chatId);
+    const messagesRef = collection(chatRef, 'messages');
+    const messagesSnapshot = await getDocs(messagesRef);
+    const batch = writeBatch(db);
+
+    messagesSnapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    batch.delete(chatRef);
+
+    await batch.commit();
+  }, 'delete chat session');
 };

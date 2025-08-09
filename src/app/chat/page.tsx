@@ -3,13 +3,7 @@
 'use client';
 
 import { useState, useRef, useEffect, FormEvent } from 'react';
-import {
-  Send,
-  Sparkles,
-  MessageSquare,
-  Plus,
-  PanelLeft,
-} from 'lucide-react';
+import { Send, Sparkles, MessageSquare, PanelLeft } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
@@ -35,10 +29,13 @@ import {
   subscribeToChatSessions,
   subscribeToMessages,
   addMessageToChat,
+  deleteChatSession,
+  updateChatSessionTitle,
 } from '@/lib/firestore-utils';
 import { ChatHistory } from './_components/ChatHistory';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ChatMessageActions } from './_components/ChatMessageActions';
 
 // A simple markdown to HTML converter
 const markdownToHtml = (text: string) => {
@@ -132,6 +129,37 @@ export default function ChatPage() {
     }
   }, [messages, isLoading]);
 
+  const handleRenameChat = async (id: string, newTitle: string) => {
+    if (!user) return;
+    try {
+      await updateChatSessionTitle(user.uid, id, newTitle);
+      toast({ title: 'Chat renamed successfully.' });
+    } catch (error) {
+      console.error('Error renaming chat:', error);
+      toast({
+        title: 'Error renaming chat',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteChat = async (id: string) => {
+    if (!user) return;
+    try {
+      await deleteChatSession(user.uid, id);
+      if (activeChatId === id) {
+        setActiveChatId(null);
+      }
+      toast({ title: 'Chat deleted successfully.' });
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      toast({
+        title: 'Error deleting chat',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || isLoading || !user) return;
@@ -169,6 +197,7 @@ export default function ChatPage() {
       const reader = stream.getReader();
       let modelResponse = '';
       let isFirstChunk = true;
+      const decoder = new TextDecoder();
 
       while (true) {
         const { done, value } = await reader.read();
@@ -177,19 +206,22 @@ export default function ChatPage() {
           break;
         }
 
-        modelResponse += value;
-        
+        modelResponse += decoder.decode(value, { stream: true });
+
         if (isFirstChunk) {
-           setMessages((prev) => [...prev, { role: 'model', content: modelResponse }]);
-           isFirstChunk = false;
+          setMessages((prev) => [
+            ...prev,
+            { role: 'model', content: modelResponse },
+          ]);
+          isFirstChunk = false;
         } else {
-            setMessages((prev) =>
-              prev.map((msg, index) =>
-                index === prev.length - 1
-                  ? { ...msg, content: modelResponse }
-                  : msg
-              )
-            );
+          setMessages((prev) =>
+            prev.map((msg, index) =>
+              index === prev.length - 1
+                ? { ...msg, content: modelResponse }
+                : msg
+            )
+          );
         }
       }
 
@@ -205,7 +237,6 @@ export default function ChatPage() {
         description: 'Sorry, something went wrong. Please try again.',
         variant: 'destructive',
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -226,6 +257,8 @@ export default function ChatPage() {
           sessions={sessions}
           activeChatId={activeChatId}
           setActiveChatId={setActiveChatId}
+          onRename={handleRenameChat}
+          onDelete={handleDeleteChat}
           isSidebarOpen={true}
         />
       </div>
@@ -250,6 +283,8 @@ export default function ChatPage() {
                       setActiveChatId(id);
                       setSidebarOpen(false);
                     }}
+                    onRename={handleRenameChat}
+                    onDelete={handleDeleteChat}
                     isSidebarOpen={isSidebarOpen}
                   />
                 </SheetContent>
@@ -265,7 +300,8 @@ export default function ChatPage() {
               <div className="space-y-6 p-6">
                 {messages.length === 0 && !isLoading && (
                   <div className="text-center text-muted-foreground pt-10">
-                    <p className="text-lg">
+                    <MessageSquare className="mx-auto h-12 w-12" />
+                    <p className="text-lg mt-4">
                       {activeChatId
                         ? 'Send a message to start the conversation.'
                         : 'Start a new chat!'}
@@ -288,7 +324,7 @@ export default function ChatPage() {
                       </Avatar>
                     )}
                     <div
-                      className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                      className={`group relative rounded-lg px-4 py-2 max-w-[80%] ${
                         message.role === 'user'
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted'
@@ -305,6 +341,9 @@ export default function ChatPage() {
                                 ),
                         }}
                       />
+                      {message.role === 'model' && (
+                        <ChatMessageActions message={message.content} />
+                      )}
                     </div>
                     {message.role === 'user' && (
                       <Avatar>
@@ -315,20 +354,20 @@ export default function ChatPage() {
                     )}
                   </div>
                 ))}
-                 {isLoading && messages[messages.length -1]?.role !== 'model' && (
-                    <div className="flex gap-3">
-                      <Avatar>
-                        <AvatarFallback>AI</AvatarFallback>
-                      </Avatar>
-                      <div className="rounded-lg px-4 py-2 max-w-[80%] bg-muted">
-                        <div className="flex items-center space-x-1 p-2">
-                          <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                          <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                          <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
-                        </div>
+                {isLoading && messages[messages.length - 1]?.role !== 'model' && (
+                  <div className="flex gap-3">
+                    <Avatar>
+                      <AvatarFallback>AI</AvatarFallback>
+                    </Avatar>
+                    <div className="rounded-lg px-4 py-2 max-w-[80%] bg-muted">
+                      <div className="flex items-center space-x-1 p-2">
+                        <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                        <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                        <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
               </div>
             </ScrollArea>
           </CardContent>
