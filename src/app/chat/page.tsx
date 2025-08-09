@@ -163,62 +163,62 @@ export default function ChatPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || isLoading || !user) return;
-
+  
     const currentInput = input;
     setInput('');
     setIsLoading(true);
-
+  
     let currentChatId = activeChatId;
-
+  
     try {
       // If there's no active chat, create a new one.
       if (!currentChatId) {
         currentChatId = await createChatSession(user.uid, currentInput);
         setActiveChatId(currentChatId);
       }
-
+  
       const userMessage: ChatMessage = {
         role: 'user',
         content: currentInput,
       };
-
+  
       // Add user message to local state immediately and save to Firestore
       setMessages((prev) => [...prev, userMessage]);
       await addMessageToChat(user.uid, currentChatId, userMessage);
-
+  
       // Create a clean history for the AI, without complex objects
-      const chatHistoryForAI: Omit<ChatMessage, 'timestamp'>[] = messages.map(
+      const chatHistoryForAI = messages.map(
         (msg) => ({
           role: msg.role,
           content: msg.content,
         })
       );
-
+  
       const chatInput: ChatInput = {
         history: chatHistoryForAI,
         prompt: currentInput,
       };
-
+  
       const stream = await chatWithBot(chatInput);
       const reader = stream.getReader();
       let modelResponse = '';
       let isFirstChunk = true;
-
+  
       // Add a placeholder for the AI response in the UI
       setMessages((prev) => [
         ...prev,
         { role: 'model', content: '' },
       ]);
-
+  
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
           setIsLoading(false);
           break;
         }
-
+  
         modelResponse += value;
-
+  
         // Update the last message (the AI's response) in the UI
         setMessages((prev) =>
           prev.map((msg, index) =>
@@ -228,14 +228,14 @@ export default function ChatPage() {
           )
         );
       }
-
+  
       // Save the final model response to Firestore
       const finalModelMessage: ChatMessage = {
         role: 'model',
         content: modelResponse,
       };
       await addMessageToChat(user.uid, currentChatId, finalModelMessage);
-
+  
       // Update the final message in the local state to ensure consistency
       setMessages((prev) =>
         prev.map((msg, index) =>
@@ -306,7 +306,7 @@ export default function ChatPage() {
               </Sheet>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-6 w-6 text-primary" />
-                <span>AI Recipe Assistant</span>
+                <span>Kinetic</span>
               </CardTitle>
             </div>
           </CardHeader>
