@@ -53,23 +53,22 @@ export default function ChatPage() {
       const stream = await chatWithBot(chatInput);
       let modelResponse = '';
 
-      setMessages((prev) => [
-        ...prev,
-        { role: 'model', content: '...' }, // Placeholder for typing effect
-      ]);
+      // Add a placeholder for the model's response
+      setMessages((prev) => [...prev, { role: 'model', content: '' }]);
 
       const reader = stream.getReader();
-      const decoder = new TextDecoder();
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
           break;
         }
-        modelResponse += decoder.decode(value, { stream: true });
+        // value is already a string, no need for TextDecoder
+        modelResponse += value;
+        // Update the last message (the model's response) with the new chunk
         setMessages((prev) =>
           prev.map((msg, index) =>
-            index === newMessages.length
+            index === prev.length - 1
               ? { ...msg, content: modelResponse }
               : msg
           )
@@ -128,7 +127,15 @@ export default function ChatPage() {
                         : 'bg-muted'
                     }`}
                   >
-                    {message.content}
+                    {message.content === '' && message.role === 'model' ? (
+                      <div className="flex items-center space-x-1">
+                        <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                        <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                        <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
+                      </div>
+                    ) : (
+                      message.content
+                    )}
                   </div>
                   {message.role === 'user' && (
                     <Avatar>
@@ -137,16 +144,6 @@ export default function ChatPage() {
                   )}
                 </div>
               ))}
-              {isLoading && messages[messages.length - 1]?.role !== 'model' && (
-                <div className="flex gap-3">
-                  <Avatar>
-                    <AvatarFallback>AI</AvatarFallback>
-                  </Avatar>
-                  <div className="rounded-lg px-4 py-2 bg-muted animate-pulse">
-                    ...
-                  </div>
-                </div>
-              )}
             </div>
           </ScrollArea>
         </CardContent>
