@@ -13,10 +13,34 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Send, Sparkles } from 'lucide-react';
 import { chatWithBot } from '@/ai/flows/recipe-chat-flow';
 import { ChatMessage, ChatInput } from '@/ai/flows/chat-types';
+import DOMPurify from 'dompurify';
+
+// A simple markdown to HTML converter
+const markdownToHtml = (text: string) => {
+  let html = text
+    // Bold
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    // Unordered lists
+    .replace(/^\s*-\s(.*)/gm, '<ul><li>$1</li></ul>')
+    .replace(/<\/ul>\n<ul>/g, '\n') // Combine lists
+    // Ordered lists
+    .replace(/^\s*\d+\.\s(.*)/gm, '<ol><li>$1</li></ol>')
+    .replace(/<\/ol>\n<ol>/g, '\n'); // Combine lists
+
+  // Paragraphs
+  html = html
+    .split('\n\n')
+    .map((p) => (p.startsWith('<') ? p : `<p>${p}</p>`))
+    .join('');
+
+  return html;
+};
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -63,7 +87,6 @@ export default function ChatPage() {
         if (done) {
           break;
         }
-        // value is already a string, no need for TextDecoder
         modelResponse += value;
         // Update the last message (the model's response) with the new chunk
         setMessages((prev) =>
@@ -121,9 +144,9 @@ export default function ChatPage() {
                     </Avatar>
                   )}
                   <div
-                    className={`rounded-lg px-4 py-2 max-w-[80%] whitespace-pre-wrap ${
+                    className={`rounded-lg px-4 py-2 max-w-[80%] prose dark:prose-invert prose-p:m-0 prose-strong:text-foreground ${
                       message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
+                        ? 'bg-primary text-primary-foreground prose-strong:text-primary-foreground'
                         : 'bg-muted'
                     }`}
                   >
@@ -134,7 +157,14 @@ export default function ChatPage() {
                         <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
                       </div>
                     ) : (
-                      message.content
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            message.role === 'user'
+                              ? message.content
+                              : DOMPurify.sanitize(markdownToHtml(message.content)),
+                        }}
+                      />
                     )}
                   </div>
                   {message.role === 'user' && (
