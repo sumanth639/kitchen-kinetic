@@ -161,6 +161,19 @@ body {
   animation: fill-up 1.5s ease-in-out infinite;
 }
 
+@keyframes reveal-up {
+  0% {
+    transform: translateY(0%);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+.animate-reveal-up {
+  animation: reveal-up 1.5s ease-in-out infinite;
+}
+
 @keyframes gradient-shift {
   0%,
   100% {
