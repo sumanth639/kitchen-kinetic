@@ -105,11 +105,13 @@ export default function ChatPage() {
       return;
     }
 
+    setIsLoading(true);
     const unsubscribe = subscribeToMessages(
       user.uid,
       activeChatId,
       (newMessages) => {
         setMessages(newMessages);
+        setIsLoading(false);
       },
       (error) => {
         toast({
@@ -117,6 +119,7 @@ export default function ChatPage() {
           description: error.message,
           variant: 'destructive',
         });
+        setIsLoading(false);
       }
     );
 
@@ -169,10 +172,16 @@ export default function ChatPage() {
 
     const currentInput = input;
     setInput('');
-    setIsLoading(true);
 
     let currentChatId = activeChatId;
-    let modelMessageId: string | undefined;
+
+    // Add user message to local state immediately for better UX
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: currentInput,
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
 
     try {
       // If there's no active chat, create a new one.
@@ -181,47 +190,56 @@ export default function ChatPage() {
         setActiveChatId(currentChatId);
       }
 
-      const userMessage: ChatMessage = {
-        role: 'user',
-        content: currentInput,
-      };
-
-      // Create a clean history for the AI, stripping out any complex objects
-      const chatHistoryForAI = messages.map(({ role, content }) => ({
-        role,
-        content,
-      }));
-
-      // Add user message and save to Firestore
+      // Add user message to Firestore
       await addMessageToChat(user.uid, currentChatId, userMessage);
-      setMessages((prev) => [...prev, userMessage]);
+
+      const chatHistoryForAI: ChatMessage[] = messages.map(
+        ({ role, content }) => ({
+          role,
+          content,
+        })
+      );
 
       const chatInput: ChatInput = {
         history: chatHistoryForAI,
         prompt: currentInput,
       };
 
-      // Add a placeholder for the AI response and get its ID
-      const modelPlaceholder: ChatMessage = { role: 'model', content: '' };
-      modelMessageId = await addMessageToChat(
-        user.uid,
-        currentChatId,
-        modelPlaceholder
-      );
-      setMessages((prev) => [...prev, modelPlaceholder]);
-
       const stream = await chatWithBot(chatInput);
       const reader = stream.getReader();
       const decoder = new TextDecoder();
       let modelResponse = '';
+      let isFirstChunk = true;
+      let modelMessageId: string | null = null;
 
       const read = async () => {
         const { done, value } = await reader.read();
+
         if (done) {
-          setIsLoading(false);
-          // Final update to the message in Firestore is handled by updateLastMessageInChat
+          if (modelMessageId) {
+            await updateLastMessageInChat(
+              user.uid,
+              currentChatId!,
+              modelMessageId,
+              modelResponse
+            );
+          }
           return;
         }
+
+        if (isFirstChunk) {
+          setIsLoading(false);
+          const modelPlaceholder: ChatMessage = { role: 'model', content: '' };
+          const docRefId = await addMessageToChat(
+            user.uid,
+            currentChatId!,
+            modelPlaceholder
+          );
+          modelMessageId = docRefId;
+          setMessages((prev) => [...prev, modelPlaceholder]);
+          isFirstChunk = false;
+        }
+
         const chunk = decoder.decode(value, { stream: true });
         modelResponse += chunk;
 
@@ -233,17 +251,9 @@ export default function ChatPage() {
           )
         );
 
-        if (modelMessageId) {
-          await updateLastMessageInChat(
-            user.uid,
-            currentChatId!,
-            modelMessageId,
-            modelResponse
-          );
-        }
         read();
       };
-      read();
+      await read();
     } catch (error) {
       console.error('Error during chat:', error);
       toast({
@@ -368,7 +378,7 @@ export default function ChatPage() {
                     )}
                   </div>
                 ))}
-                {isLoading && messages[messages.length - 1]?.role !== 'model' && (
+                {isLoading && (
                   <div className="flex gap-3">
                     <Avatar>
                       <AvatarFallback>AI</AvatarFallback>
