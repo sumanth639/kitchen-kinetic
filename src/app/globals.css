@@ -148,6 +148,19 @@ body {
   }
 }
 
+@keyframes fill-up {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0%);
+  }
+}
+
+.animate-fill-up {
+  animation: fill-up 1.5s ease-in-out infinite;
+}
+
 @keyframes gradient-shift {
   0%,
   100% {
