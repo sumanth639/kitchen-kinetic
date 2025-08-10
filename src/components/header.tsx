@@ -88,7 +88,7 @@ export function Header() {
                 {/* Create Recipe Button */}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Link href={getLinkHref('/recipes/new')}>
+                    <Link href={getLinkHref('/recipes/new')} className="hidden sm:inline-flex">
                       <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
                         <PlusCircle className="h-4 w-4" />
                         <span className="sr-only">Create Recipe</span>
@@ -142,6 +142,12 @@ export function Header() {
                       <Link href="/wishlist" className="cursor-pointer">
                         <Heart className="mr-2 h-4 w-4" />
                         <span>Wishlist</span>
+                      </Link>
+                    </DropdownMenuItem>
+                     <DropdownMenuItem asChild className="sm:hidden">
+                      <Link href="/recipes/new" className="cursor-pointer">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        <span>Create Recipe</span>
                       </Link>
                     </DropdownMenuItem>
                     <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
