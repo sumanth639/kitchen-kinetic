@@ -40,6 +40,7 @@ interface ChatHistoryProps {
   setActiveChatId: (id: string | null) => void;
   onRename: (id: string, newTitle: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onNewChat: () => void;
   isSidebarOpen: boolean;
 }
 
@@ -49,6 +50,7 @@ export function ChatHistory({
   setActiveChatId,
   onRename,
   onDelete,
+  onNewChat,
 }: ChatHistoryProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -83,7 +85,7 @@ export function ChatHistory({
         <Button
           variant="outline"
           className="w-full justify-start gap-2"
-          onClick={() => setActiveChatId(null)}
+          onClick={onNewChat}
         >
           <Plus className="h-4 w-4" />
           <span>New Chat</span>
