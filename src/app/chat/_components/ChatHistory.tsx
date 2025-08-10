@@ -132,8 +132,7 @@ export function ChatHistory({
                   className="w-full justify-start gap-2 flex-1 min-w-0"
                   onClick={() => setActiveChatId(session.id)}
                 >
-                  <MessageSquare className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate flex-1 text-left">
+                  <span className="truncate flex-1 text-left capitalize">
                     {session.title}
                   </span>
                 </Button>

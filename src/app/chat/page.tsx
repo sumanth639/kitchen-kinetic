@@ -3,7 +3,7 @@
 'use client';
 
 import { useRef } from 'react';
-import { Sparkles, PanelLeft } from 'lucide-react';
+import { Zap, PanelLeft } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 
 import { Button } from '@/components/ui/button';
@@ -97,7 +97,7 @@ export default function ChatPage() {
                 </SheetContent>
               </Sheet>
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-6 w-6 text-primary" />
+                <Zap className="h-6 w-6 text-primary" />
                 <span>Kinetic</span>
               </CardTitle>
             </div>

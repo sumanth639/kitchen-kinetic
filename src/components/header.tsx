@@ -9,10 +9,12 @@ import {
   PlusCircle,
   Heart,
   MessageSquare,
-  Bot,
+  Zap ,
   Moon,
   Sun,
 } from 'lucide-react';
+
+
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
 import { useAuth } from '@/components/auth-provider';
@@ -80,7 +82,7 @@ export function Header() {
                   size="sm"
                   className="h-9 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
                 >
-                  <Bot className="h-4 w-4 mr-2" />
+                  <Zap className="h-4 w-4 mr-2" />
                   Ask Kinetic
                 </Button>
               </Link>
