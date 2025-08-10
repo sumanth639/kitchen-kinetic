@@ -72,6 +72,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isAwaitingResponse, setIsAwaitingResponse] = useState(false);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -133,7 +134,7 @@ export default function ChatPage() {
         behavior: 'smooth',
       });
     }
-  }, [messages, isLoading]);
+  }, [messages, isAwaitingResponse]);
 
   const handleRenameChat = async (id: string, newTitle: string) => {
     if (!user) return;
@@ -168,40 +169,31 @@ export default function ChatPage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim() || isLoading || !user) return;
+    if (!input.trim() || isAwaitingResponse || !user) return;
 
     const currentInput = input;
     setInput('');
+    setIsAwaitingResponse(true);
 
     let currentChatId = activeChatId;
 
-    // Add user message to local state immediately for better UX
-    const userMessage: ChatMessage = {
-      role: 'user',
-      content: currentInput,
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setIsLoading(true);
+    const userMessage: ChatMessage = { role: 'user', content: currentInput };
+    const currentChatHistory = [...messages, userMessage];
+    setMessages(currentChatHistory);
 
     try {
-      // If there's no active chat, create a new one.
       if (!currentChatId) {
-        currentChatId = await createChatSession(user.uid, currentInput);
-        setActiveChatId(currentChatId);
+        const newChatId = await createChatSession(user.uid, currentInput);
+        setActiveChatId(newChatId);
+        currentChatId = newChatId;
       }
-
-      // Add user message to Firestore
       await addMessageToChat(user.uid, currentChatId, userMessage);
 
-      const chatHistoryForAI: ChatMessage[] = messages.map(
-        ({ role, content }) => ({
+      const chatInput: ChatInput = {
+        history: currentChatHistory.map(({ role, content }) => ({
           role,
           content,
-        })
-      );
-
-      const chatInput: ChatInput = {
-        history: chatHistoryForAI,
+        })),
         prompt: currentInput,
       };
 
@@ -216,6 +208,7 @@ export default function ChatPage() {
         const { done, value } = await reader.read();
 
         if (done) {
+          setIsAwaitingResponse(false);
           if (modelMessageId) {
             await updateLastMessageInChat(
               user.uid,
@@ -228,7 +221,6 @@ export default function ChatPage() {
         }
 
         if (isFirstChunk) {
-          setIsLoading(false);
           const modelPlaceholder: ChatMessage = { role: 'model', content: '' };
           const docRefId = await addMessageToChat(
             user.uid,
@@ -261,7 +253,7 @@ export default function ChatPage() {
         description: 'Sorry, something went wrong. Please try again.',
         variant: 'destructive',
       });
-      setIsLoading(false);
+      setIsAwaitingResponse(false);
     }
   };
 
@@ -322,7 +314,14 @@ export default function ChatPage() {
           <CardContent className="flex-1 p-0 overflow-hidden">
             <ScrollArea className="h-full" viewportRef={scrollAreaRef}>
               <div className="space-y-6 p-6">
-                {messages.length === 0 && !isLoading && (
+                {isLoading && messages.length === 0 && (
+                  <div className="text-center text-muted-foreground pt-10">
+                    <Skeleton className="h-12 w-12 mx-auto rounded-full" />
+                    <Skeleton className="h-4 w-48 mx-auto mt-4" />
+                    <Skeleton className="h-4 w-32 mx-auto mt-2" />
+                  </div>
+                )}
+                {messages.length === 0 && !isLoading && !isAwaitingResponse && (
                   <div className="text-center text-muted-foreground pt-10">
                     <MessageSquare className="mx-auto h-12 w-12" />
                     <p className="text-lg mt-4">
@@ -378,7 +377,7 @@ export default function ChatPage() {
                     )}
                   </div>
                 ))}
-                {isLoading && (
+                {isAwaitingResponse && (
                   <div className="flex gap-3">
                     <Avatar>
                       <AvatarFallback>AI</AvatarFallback>
@@ -401,9 +400,9 @@ export default function ChatPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about a recipe..."
-                disabled={isLoading}
+                disabled={isAwaitingResponse}
               />
-              <Button type="submit" disabled={isLoading || !input.trim()}>
+              <Button type="submit" disabled={isAwaitingResponse || !input.trim()}>
                 <Send className="h-4 w-4" />
               </Button>
             </form>
