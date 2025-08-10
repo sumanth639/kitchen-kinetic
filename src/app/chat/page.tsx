@@ -1,5 +1,3 @@
-// src/app/chat/page.tsx
-
 'use client';
 
 import { useRef } from 'react';
@@ -7,12 +5,7 @@ import { Zap, PanelLeft } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ChatHistory } from './_components/ChatHistory';
 import { MessageList } from './_components/MessageList';
 import { ChatInput } from './_components/ChatInput';
-import { useChat } from './_hooks/useChat';
+import { useChat } from '../../hooks/useChat';
 
 export default function ChatPage() {
   const { user, loading: authLoading } = useAuth();

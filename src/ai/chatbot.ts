@@ -1,20 +1,15 @@
 import * as genkit from '@genkit-ai/core';
-import {
-  StreamPart,
-  generate,
-  GenerationOptions,
-  Part,
-} from '@genkit-ai/flow';
+import { StreamPart, generate, GenerationOptions, Part } from '@genkit-ai/flow';
 import { googleAI } from '@genkit-ai/googleai';
 
 genkit.configure({
   plugins: [
     googleAI({
-      apiNamespace: 'googleai', // or customize namespace
-      streaming: true, // Enable streaming
+      apiNamespace: 'googleai',
+      streaming: true,
     }),
   ],
-  flowStateStore: 'firestore', // Or any other Genkit FlowStateStore
+  flowStateStore: 'firestore',
 });
 
 export const chatFlow = genkit.defineFlow(
@@ -44,12 +39,12 @@ export const chatFlow = genkit.defineFlow(
       },
       options: {
         streaming: true,
-      } as GenerationOptions, // Explicitly cast to GenerationOptions
+      } as GenerationOptions,
     });
 
     let fullText = '';
     for await (const chunk of response.stream()) {
-      const part = chunk as StreamPart; // Cast to StreamPart
+      const part = chunk as StreamPart;
 
       if (part.text) {
         fullText += part.text;

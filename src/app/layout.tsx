@@ -38,8 +38,8 @@ export default function RootLayout({
           <AuthProvider>
             <div className="relative flex min-h-screen flex-col">
               <Header />
-              <main className="flex-1 mt-14">{children}</main>
-              <Footer />
+              <main className="flex-1 ">{children}</main>
+              {/* <Footer /> */}
             </div>
             <Toaster />
           </AuthProvider>

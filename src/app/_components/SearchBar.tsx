@@ -76,10 +76,10 @@ export function SearchBar({
           </div>
 
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-7xl font-bold mb-2 sm:mb-3 md:mb-4 tracking-tight text-white drop-shadow-2xl animate-title-glow">
-            Kitchen{' '}
-            <span className="relative inline-block text-primary-foreground bg-amber-600 text-gray-800 px-2 sm:px-3 py-1 rounded-lg sm:rounded-xl shadow-lg animate-gradient-shift">
+            <span className="relative inline-block text-primary-foreground bg-primary text-gray-800 px-2 sm:px-3 py-1 rounded-lg sm:rounded-xl shadow-lg animate-gradient-shift">
               Kinetic
             </span>
+            &nbsp;Kitchen
           </h1>
 
           <p

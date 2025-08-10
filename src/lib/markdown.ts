@@ -1,6 +1,3 @@
-// src/app/chat/_utils/markdown.ts
-
-// A simple markdown to HTML converter
 export const markdownToHtml = (text: string) => {
   let html = text
     .replace(/^# (.*$)/gim, '<h1>$1</h1>')

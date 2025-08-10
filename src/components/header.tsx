@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -9,11 +8,10 @@ import {
   PlusCircle,
   Heart,
   MessageSquare,
-  Zap ,
+  Zap,
   Moon,
   Sun,
 } from 'lucide-react';
-
 
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
@@ -51,19 +49,16 @@ export function Header() {
       <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
-          className="flex items-center gap-3 group"
+          className="flex items-center  group"
           aria-label="Kitchen Kinetic Home"
         >
           <div className="p-1.5">
             <img
-              src="/logo.webp"
+              src="/logo.png"
               alt="Kitchen Kinetic Logo"
               className="h-16 w-16 object-contain"
             />
           </div>
-          <span className="font-semibold text-xl tracking-tight hidden sm:inline-block">
-            Kitchen Kinetic
-          </span>
         </Link>
 
         <div className="flex items-center gap-3">
@@ -90,7 +85,10 @@ export function Header() {
                 {/* Create Recipe Button */}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Link href={getLinkHref('/recipes/new')} className="hidden sm:inline-flex">
+                    <Link
+                      href={getLinkHref('/recipes/new')}
+                      className="hidden sm:inline-flex"
+                    >
                       <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
                         <PlusCircle className="h-4 w-4" />
                         <span className="sr-only">Create Recipe</span>
@@ -146,7 +144,7 @@ export function Header() {
                         <span>Wishlist</span>
                       </Link>
                     </DropdownMenuItem>
-                     <DropdownMenuItem asChild className="sm:hidden">
+                    <DropdownMenuItem asChild className="sm:hidden">
                       <Link href="/recipes/new" className="cursor-pointer">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         <span>Create Recipe</span>

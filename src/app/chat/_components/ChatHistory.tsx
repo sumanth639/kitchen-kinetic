@@ -1,5 +1,3 @@
-// src/app/chat/_components/ChatHistory.tsx
-
 'use client';
 
 import { useState } from 'react';
@@ -33,6 +31,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 interface ChatHistoryProps {
   sessions: ChatSession[];
@@ -162,10 +161,13 @@ export function ChatHistory({
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              Delete Chat Confirmation
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will permanently delete the chat "
-                              {session.title}".
+                              Are you sure you want to permanently delete the
+                              chat "{session.title}"? This action cannot be
+                              undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

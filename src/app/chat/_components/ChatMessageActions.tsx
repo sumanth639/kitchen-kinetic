@@ -1,5 +1,3 @@
-// src/app/chat/_components/ChatMessageActions.tsx
-
 'use client';
 
 import { useState } from 'react';
@@ -27,12 +25,17 @@ export function ChatMessageActions({ message }: ChatMessageActionsProps) {
   };
 
   return (
-    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-      <Button onClick={onCopy} variant="ghost" size="icon" className="h-7 w-7">
+    <div className="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-100 scale-75">
+      <Button
+        onClick={onCopy}
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 md:h-8 md:w-8 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 shadow-md md:shadow-lg hover:shadow-lg md:hover:shadow-xl hover:scale-110 transition-all duration-300"
+      >
         {hasCopied ? (
-          <Check className="h-4 w-4 text-green-500" />
+          <Check className="h-3 w-3 md:h-4 md:w-4 text-green-500" />
         ) : (
-          <Clipboard className="h-4 w-4" />
+          <Clipboard className="h-3 w-3 md:h-4 md:w-4" />
         )}
         <span className="sr-only">Copy message</span>
       </Button>
