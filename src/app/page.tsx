@@ -90,7 +90,7 @@ export default function Home() {
   }, [page, totalPages, searchParams, router]);
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col -mt-14">
       <div>
         <SearchBar
           onSubmit={onSubmit}
