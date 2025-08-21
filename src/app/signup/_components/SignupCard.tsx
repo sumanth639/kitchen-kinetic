@@ -45,7 +45,6 @@ export default function SignupCard() {
     defaultValues: { email: '', password: '' },
   });
 
-  // ✅ Handle email/password signup
   const onSubmit = useCallback(
     async (data: SignupFormValues) => {
       setLoading(true);
@@ -68,7 +67,6 @@ export default function SignupCard() {
     [toast]
   );
 
-  // ✅ Handle Google sign-up
   const handleGoogleSignIn = useCallback(async () => {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();

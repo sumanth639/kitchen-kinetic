@@ -14,7 +14,7 @@ export function RecipeInfoCard({ recipe, servings }: RecipeInfoCardProps) {
         </div>
         <div className="flex justify-between items-center py-2 border-b">
           <span className="text-muted-foreground">Servings</span>
-          <span className="font-medium">{recipe.servings} people</span>
+          <span className="font-medium">{servings} people</span>
         </div>
         <div className="flex justify-between items-center py-2">
           <span className="text-muted-foreground">Publisher</span>
