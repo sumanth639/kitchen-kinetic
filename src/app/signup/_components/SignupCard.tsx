@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,6 +24,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { GoogleIcon } from '@/components/icons/google-icon';
+import { getAuthErrorMessage } from '@/lib/authErrorMessages';
 
 const signupFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -41,71 +42,56 @@ export default function SignupCard() {
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupFormSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
+    defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = async (data: SignupFormValues) => {
-    setLoading(true);
-    try {
-      await createUserWithEmailAndPassword(auth, data.email, data.password);
-      toast({
-        title: 'Account created successfully',
-        description: 'Welcome to Kitchen Kinetic!',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Error creating account',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ✅ Handle email/password signup
+  const onSubmit = useCallback(
+    async (data: SignupFormValues) => {
+      setLoading(true);
+      try {
+        await createUserWithEmailAndPassword(auth, data.email, data.password);
+        toast({
+          title: '🎉 Account created successfully',
+          description: 'Welcome to Kitchen Kinetic!',
+        });
+      } catch (error: any) {
+        toast({
+          title: 'Signup Failed',
+          description: getAuthErrorMessage(error.code),
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast]
+  );
 
-  const handleGoogleSignIn = async () => {
+  // ✅ Handle Google sign-up
+  const handleGoogleSignIn = useCallback(async () => {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
-
-    provider.setCustomParameters({
-      prompt: 'select_account',
-    });
+    provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
       const result = await signInWithPopup(auth, provider);
       toast({
-        title: 'Account created successfully',
+        title: '🎉 Account created successfully',
         description: `Welcome, ${
           result.user.displayName || result.user.email
         }!`,
       });
     } catch (error: any) {
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast({
-          title: 'Sign-up cancelled',
-          description: 'You closed the popup before completing sign-up.',
-          variant: 'destructive',
-        });
-      } else if (error.code === 'auth/popup-blocked') {
-        toast({
-          title: 'Popup blocked',
-          description: 'Please allow popups for this site and try again.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Google Sign-Up Error',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
+      toast({
+        title: 'Google Sign-Up Failed',
+        description: getAuthErrorMessage(error.code),
+        variant: 'destructive',
+      });
     } finally {
       setGoogleLoading(false);
     }
-  };
+  }, [toast]);
 
   return (
     <>
@@ -123,11 +109,12 @@ export default function SignupCard() {
           </Link>
         </p>
       </div>
+
       <Card className="shadow-xl">
         <CardHeader>
           <CardTitle>Sign Up</CardTitle>
           <CardDescription>
-            Create an account to save and create recipes.
+            Create an account to save and share recipes.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -146,6 +133,7 @@ export default function SignupCard() {
                 </p>
               )}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
@@ -160,6 +148,7 @@ export default function SignupCard() {
                 </p>
               )}
             </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
@@ -171,6 +160,8 @@ export default function SignupCard() {
               )}
             </Button>
           </form>
+
+          {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -181,6 +172,8 @@ export default function SignupCard() {
               </span>
             </div>
           </div>
+
+          {/* Google Sign-up */}
           <Button
             variant="outline"
             className="w-full"
@@ -194,6 +187,7 @@ export default function SignupCard() {
             )}
             {googleLoading ? 'Creating account...' : 'Sign up with Google'}
           </Button>
+
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Already have an account?{' '}
             <Link

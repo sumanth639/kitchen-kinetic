@@ -36,7 +36,7 @@ export function ChatInput({
   };
 
   return (
-    <CardFooter className="border-none bg-transparent  p-3 md:p-6">
+    <div className="">
       <div className="w-full max-w-4xl mx-auto">
         <form onSubmit={onSubmit} className="relative">
           <div className="hidden md:block absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 via-purple-500/20 to-blue-500/20 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
@@ -112,6 +112,6 @@ export function ChatInput({
           </div>
         </form>
       </div>
-    </CardFooter>
+    </div>
   );
 }

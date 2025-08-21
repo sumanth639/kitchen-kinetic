@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import {
   signInWithEmailAndPassword,
@@ -21,6 +21,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { GoogleIcon } from '@/components/icons/google-icon';
 import { Loader2 } from 'lucide-react';
+import { getAuthErrorMessage } from '@/lib/authErrorMessages';
 
 export default function LoginCard() {
   const [email, setEmail] = useState('');
@@ -29,67 +30,55 @@ export default function LoginCard() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  // ✅ Email/Password Login
+  const handleEmailSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setLoading(true);
 
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({
-        title: 'Success!',
-        description: 'You have been logged in successfully.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        toast({
+          title: 'Welcome back 🎉',
+          description: 'You have been logged in successfully.',
+        });
+      } catch (error: any) {
+        toast({
+          title: 'Login Failed',
+          description: getAuthErrorMessage(error.code),
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [email, password, toast]
+  );
 
-  const handleGoogleSignIn = async () => {
+  // ✅ Google Sign-in
+  const handleGoogleSignIn = useCallback(async () => {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
-
-    provider.setCustomParameters({
-      prompt: 'select_account',
-    });
+    provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
       const result = await signInWithPopup(auth, provider);
       toast({
-        title: 'Signed in successfully',
+        title: 'Signed in successfully 🎉',
         description: `Welcome back, ${
           result.user.displayName || result.user.email
         }!`,
       });
     } catch (error: any) {
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast({
-          title: 'Sign-in cancelled',
-          description: 'You closed the popup before completing sign-in.',
-          variant: 'destructive',
-        });
-      } else if (error.code === 'auth/popup-blocked') {
-        toast({
-          title: 'Popup blocked',
-          description: 'Please allow popups for this site and try again.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Google Sign-In Error',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
+      toast({
+        title: 'Google Sign-in Failed',
+        description: getAuthErrorMessage(error.code),
+        variant: 'destructive',
+      });
     } finally {
       setGoogleLoading(false);
     }
-  };
+  }, [toast]);
 
   return (
     <>
@@ -107,6 +96,7 @@ export default function LoginCard() {
           </Link>
         </p>
       </div>
+
       <Card className="shadow-xl">
         <CardHeader>
           <CardTitle>Login</CardTitle>
@@ -150,6 +140,7 @@ export default function LoginCard() {
             </Button>
           </form>
 
+          {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -161,6 +152,7 @@ export default function LoginCard() {
             </div>
           </div>
 
+          {/* Google Login */}
           <Button
             variant="outline"
             className="w-full"
@@ -176,7 +168,7 @@ export default function LoginCard() {
           </Button>
 
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link
               href="/signup"
               className="font-medium text-primary hover:underline"
