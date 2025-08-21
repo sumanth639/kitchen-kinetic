@@ -36,12 +36,12 @@ export function ChatInput({
   };
 
   return (
-    <CardFooter className="border-none bg-gradient-to-t from-background via-background/95 to-background/90 backdrop-blur-md p-3 md:p-6">
+    <CardFooter className="border-none bg-transparent  p-3 md:p-6">
       <div className="w-full max-w-4xl mx-auto">
         <form onSubmit={onSubmit} className="relative">
           <div className="hidden md:block absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 via-purple-500/20 to-blue-500/20 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
 
-          <div className="relative flex items-center gap-1 md:gap-2 bg-background/80 backdrop-blur-sm rounded-full border border-border/40 md:border-2 shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl focus-within:border-primary/60 focus-within:shadow-xl md:focus-within:shadow-2xl transition-all duration-300 group">
+          <div className="relative flex items-center gap-1 md:gap-2 rounded-full border border-border/40 md:border-2 shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl focus-within:border-primary/60 focus-within:shadow-xl md:focus-within:shadow-2xl transition-all duration-300 group">
             <div className="flex-1 relative">
               <Input
                 value={input}

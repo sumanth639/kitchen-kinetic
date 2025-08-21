@@ -5,7 +5,6 @@ import { useState, useEffect, useCallback, FormEvent, RefObject } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
-import { ChatSession } from '@/types';
 import { ChatMessage, ChatInput } from '@/ai/flows/chat-types';
 import {
   createChatSession,
@@ -17,9 +16,10 @@ import {
   updateLastMessageInChat,
 } from '@/lib/firestore-utils';
 import { chatWithBot } from '@/ai/flows/recipe-chat-flow';
+import { ChatSession } from '@/types';
 
-export function useChat(scrollAreaRef: RefObject<HTMLDivElement>) {
-  const { user, loading: authLoading } = useAuth();
+export function useChat(scrollRef: RefObject<HTMLDivElement>) {
+  const { user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -31,70 +31,67 @@ export function useChat(scrollAreaRef: RefObject<HTMLDivElement>) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isAwaitingResponse, setIsAwaitingResponse] = useState(false);
 
-  // Effect for auth redirection
+  // Redirect if not authenticated
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!loading && !user) {
       router.push('/login');
     }
-  }, [user, authLoading, router]);
+  }, [loading, user, router]);
 
-  // Effect for subscribing to chat sessions
+  // Subscribe to chat sessions for user
   useEffect(() => {
     if (!user) return;
-
     const unsubscribe = subscribeToChatSessions(
       user.uid,
       setSessions,
       (error) => {
         toast({
-          title: 'Error loading chats',
-          description: error.message,
+          title: 'Unable to load chat list',
+          description: 'Please check your internet connection and try again.',
           variant: 'destructive',
         });
       }
     );
-
     return () => unsubscribe();
   }, [user, toast]);
 
-  // Effect for subscribing to messages of the active chat
+  // Subscribe to messages for active chat
   useEffect(() => {
     if (!user || !activeChatId) {
       setMessages([]);
       return;
     }
-
     setIsLoading(true);
     const unsubscribe = subscribeToMessages(
       user.uid,
       activeChatId,
-      (newMessages) => {
-        setMessages(newMessages);
+      (msgs) => {
+        setMessages(msgs);
         setIsLoading(false);
       },
       (error) => {
         toast({
-          title: 'Error loading messages',
-          description: error.message,
+          title: 'Unable to load chat messages',
+          description: 'Check your connection or try selecting another chat.',
           variant: 'destructive',
         });
         setIsLoading(false);
       }
     );
-
     return () => unsubscribe();
   }, [user, activeChatId, toast]);
 
-  // Effect for auto-scrolling
+  // Auto scroll to bottom on change
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({
-        top: scrollAreaRef.current.scrollHeight,
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
         behavior: 'smooth',
       });
     }
-  }, [messages, isAwaitingResponse, scrollAreaRef]);
+  }, [messages, isAwaitingResponse, scrollRef]);
 
+  // Set active chat handler
   const handleSetActiveChatId = useCallback((id: string | null) => {
     setActiveChatId(id);
   }, []);
@@ -103,15 +100,15 @@ export function useChat(scrollAreaRef: RefObject<HTMLDivElement>) {
     setActiveChatId(null);
   }, []);
 
-  const handleRenameChat = async (id: string, newTitle: string) => {
+  const handleRenameChat = async (id: string, title: string) => {
     if (!user) return;
     try {
-      await updateChatSessionTitle(user.uid, id, newTitle);
+      await updateChatSessionTitle(user.uid, id, title);
       toast({ title: 'Chat renamed successfully.' });
-    } catch (error) {
-      console.error('Error renaming chat:', error);
+    } catch {
       toast({
-        title: 'Error renaming chat',
+        title: 'Failed to rename chat',
+        description: 'Please try again later or refresh the page.',
         variant: 'destructive',
       });
     }
@@ -121,113 +118,102 @@ export function useChat(scrollAreaRef: RefObject<HTMLDivElement>) {
     if (!user) return;
     try {
       await deleteChatSession(user.uid, id);
-      if (activeChatId === id) {
-        setActiveChatId(null);
-      }
+      if (activeChatId === id) setActiveChatId(null);
       toast({ title: 'Chat deleted successfully.' });
-    } catch (error) {
-      console.error('Error deleting chat:', error);
+    } catch {
       toast({
-        title: 'Error deleting chat',
+        title: 'Failed to delete chat',
+        description: 'Please try again later or refresh the page.',
         variant: 'destructive',
       });
     }
   };
 
+  // Submit new user message and get streaming AI response
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim() || isAwaitingResponse || !user) return;
+    if (!user || !input.trim() || isAwaitingResponse) return;
 
     const currentInput = input;
     const userMessage: ChatMessage = { role: 'user', content: currentInput };
 
-    // Optimistic UI updates
     setInput('');
     setMessages((prev) => [...prev, userMessage]);
     setIsAwaitingResponse(true);
 
-    let currentChatId = activeChatId;
+    let chatId = activeChatId;
 
     try {
-      // Create a new chat session if one doesn't exist
-      if (!currentChatId) {
-        const newChatId = await createChatSession(user.uid, currentInput);
-        setActiveChatId(newChatId);
-        currentChatId = newChatId;
+      // Create new chat if no active one
+      if (!chatId) {
+        chatId = await createChatSession(user.uid, currentInput);
+        setActiveChatId(chatId);
       }
 
-      // Save user message to Firestore
-      await addMessageToChat(user.uid, currentChatId, userMessage);
+      // Save user message
+      await addMessageToChat(user.uid, chatId, userMessage);
 
-      // Prepare input for the AI model
+      // Prepare plain JSON messages without Firestore Timestamps
+      const sanitizedHistory = messages.map(({ role, content }) => ({ role, content }));
+
       const chatInput: ChatInput = {
-        history: messages.map(({ role, content }) => ({ role, content })),
+        history: sanitizedHistory,
         prompt: currentInput,
       };
 
-      // Get the streaming response from the AI
+      // Get streaming response from AI
       const stream = await chatWithBot(chatInput);
+      let modelContent = '';
+      let modelMsgId: string | null = null;
+
+      // Append placeholder AI message to UI
+      const placeholder: ChatMessage = { role: 'model', content: '' };
+      setMessages((prev) => [...prev, placeholder]);
+
       const reader = stream.getReader();
       const decoder = new TextDecoder();
-      let modelResponse = '';
-      let isFirstChunk = true;
-      let modelMessageId: string | null = null;
-      
-      const modelPlaceholder: ChatMessage = { role: 'model', content: '' };
-      setMessages((prev) => [...prev, modelPlaceholder]);
 
-      const read = async () => {
-        const { done, value } = await reader.read();
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        modelContent += decoder.decode(value, { stream: true });
 
-        if (done) {
-          setIsAwaitingResponse(false);
-          // Finalize the model's message in Firestore
-          if (modelMessageId) {
-            await updateLastMessageInChat(
-              user.uid,
-              currentChatId!,
-              modelMessageId,
-              modelResponse
-            );
+        if (!modelMsgId) {
+          try {
+            modelMsgId = await addMessageToChat(user.uid, chatId, { role: 'model', content: '' });
+          } catch {
+            toast({
+              title: 'Failed to initialize AI response',
+              description: 'Check your connection; AI response might be delayed.',
+              variant: 'default',
+            });
           }
-          return;
         }
 
-        if (isFirstChunk) {
-           // Create the model message placeholder in Firestore on the first chunk
-          const docRefId = await addMessageToChat(
-            user.uid,
-            currentChatId!,
-            { role: 'model', content: '' }
-          );
-          modelMessageId = docRefId;
-          isFirstChunk = false;
-        }
-
-        const chunk = decoder.decode(value, { stream: true });
-        modelResponse += chunk;
-
-        // Update the UI with the streaming content
         setMessages((prev) =>
-          prev.map((msg, index) =>
-            index === prev.length - 1
-              ? { ...msg, content: modelResponse }
-              : msg
-          )
+          prev.map((m, idx) => (idx === prev.length - 1 ? { ...m, content: modelContent } : m))
         );
+      }
 
-        await read();
-      };
-      await read();
-    } catch (error) {
-      console.error('Error during chat:', error);
+      if (modelMsgId) {
+        try {
+          await updateLastMessageInChat(user.uid, chatId, modelMsgId, modelContent);
+        } catch {
+          toast({
+            title: 'Failed to finalize AI response',
+            description: 'AI response saved incompletely. Refresh to sync.',
+            variant: 'default',
+          });
+        }
+      }
+    } catch {
       toast({
-        title: 'Error',
-        description: 'Sorry, something went wrong. Please try again.',
+        title: 'Chat error',
+        description: 'Unexpected error occurred. Please try again.',
         variant: 'destructive',
       });
-      // Revert optimistic UI updates on error
-      setMessages((prev) => prev.slice(0, -1));
+      setMessages((prev) => prev.slice(0, -1)); // rollback optimistic message
+    } finally {
       setIsAwaitingResponse(false);
     }
   };
@@ -243,9 +229,9 @@ export function useChat(scrollAreaRef: RefObject<HTMLDivElement>) {
     setSidebarOpen,
     isAwaitingResponse,
     handleSetActiveChatId,
+    handleNewChat,
     handleRenameChat,
     handleDeleteChat,
-    handleNewChat,
     handleSubmit,
   };
 }

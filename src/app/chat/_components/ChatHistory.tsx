@@ -9,7 +9,9 @@ import {
   Check,
   X,
   Loader2,
-  MoreHorizontal,
+ 
+  MoreVerticalIcon,
+  MoreVertical,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -139,7 +141,7 @@ export function ChatHistory({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-7 w-7">
-                        <MoreHorizontal className="h-4 w-4" />
+                        <MoreVertical className="h-4 w-4 text-primary" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
