@@ -1,7 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Soup, Search } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronLeft, ChevronRight, Soup, Search, Zap } from 'lucide-react';
 import { RecipeCard } from './RecipeCard';
 import { RecipeListProps } from '../types';
 import { RecipeListLoading } from './RecipeSkeletonCard';
@@ -148,17 +149,31 @@ export const RecipeList = ({
                   <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-accent/30 dark:bg-accent/40 animate-pulse delay-1000" />
                 </div>
 
+                <div className="flex justify-center mb-6">
+                  <Link href="/chat">
+                    <Button
+                      variant="outline"
+                      size="default"
+                      className="border-primary text-primary hover:bg-primary hover:text-primary-foreground font-medium px-6 py-2 transition-all duration-200"
+                    >
+                      <Zap className="h-4 w-4 mr-2" />
+                      Ask Kinetic
+                    </Button>
+                  </Link>
+                </div>
+
                 <h3 className="text-xl sm:text-2xl font-bold mb-3 text-foreground">
                   No recipes found
                 </h3>
-                <p className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
+
+                <p className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto leading-relaxed mb-6">
                   {hasSearched
                     ? 'Try searching with different keywords, or explore our featured collection!'
                     : 'Start your culinary journey by searching for recipes or adding your own!'}
                 </p>
 
                 {hasSearched && (
-                  <div className="mt-6 p-4 rounded-xl bg-muted/30 dark:bg-muted/20 border border-border/50 max-w-sm mx-auto">
+                  <div className="mb-8 p-4 rounded-xl bg-muted/30 dark:bg-muted/20 border border-border/50 max-w-sm mx-auto">
                     <p className="text-sm text-muted-foreground">
                       <span className="font-medium">Tip:</span> Try broader
                       terms like "chicken", "pasta", or "dessert"

@@ -5,7 +5,6 @@ import './globals.css';
 import { Header } from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
-import { Footer } from '@/components/footer';
 import { QueryProvider } from '@/lib/query-provider';
 
 export const metadata: Metadata = {
