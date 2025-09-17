@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Soup, Search, Zap } from 'lucide-react';
 import { RecipeCard } from './RecipeCard';
+import { Suspense } from 'react';
 import { RecipeListProps } from '../types';
 import { RecipeListLoading } from './RecipeSkeletonCard';
 
@@ -86,16 +87,18 @@ export const RecipeList = ({
           <>
             {recipes.length > 0 ? (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-8 md:gap-8 mb-8 sm:mb-12">
-                  {paginatedRecipes.map((recipe, index) => (
-                    <RecipeCard
-                      key={recipe.id}
-                      recipe={recipe}
-                      isFeatured={isFeaturedView}
-                      isPriority={index < 4}
-                    />
-                  ))}
-                </div>
+                <Suspense fallback={<RecipeListLoading recipePerCard={RECIPES_PER_PAGE} />}>
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-8 md:gap-8 mb-8 sm:mb-12">
+                    {paginatedRecipes.map((recipe, index) => (
+                      <RecipeCard
+                        key={recipe.id}
+                        recipe={recipe}
+                        isFeatured={isFeaturedView}
+                        isPriority={index < 4}
+                      />
+                    ))}
+                  </div>
+                </Suspense>
 
                 {!isFeaturedView && totalPages > 1 && (
                   <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 mt-12 sm:mt-16">

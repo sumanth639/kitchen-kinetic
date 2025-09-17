@@ -1,5 +1,4 @@
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
 import { Recipe } from '@/types/index';
 
 const API_KEY = process.env.NEXT_PUBLIC_FORKIFY_API_KEY;
@@ -33,13 +32,11 @@ export async function getForkifyRecipe(id: string): Promise<Recipe | null> {
 
 export async function getFirestoreRecipe(id: string): Promise<Recipe | null> {
   try {
-    const recipeDocRef = doc(db, 'recipes', id);
-    const docSnap = await getDoc(recipeDocRef);
-
-    if (docSnap.exists()) {
-      const data = docSnap.data();
+    const snap = await adminDb.collection('recipes').doc(id).get();
+    if (snap.exists) {
+      const data = snap.data() as any;
       return {
-        id: docSnap.id,
+        id: snap.id,
         title: data.title,
         image_url: data.imageUrl || '/placeholder-recipe.jpg',
         publisher: data.publisher || 'Your Kitchen',
@@ -49,9 +46,8 @@ export async function getFirestoreRecipe(id: string): Promise<Recipe | null> {
         ingredients: data.ingredients || [],
         userId: data.userId,
       };
-    } else {
-      return null;
     }
+    return null;
   } catch {
     return null;
   }

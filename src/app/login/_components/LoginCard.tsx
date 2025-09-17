@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -29,6 +30,21 @@ export default function LoginCard() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const finishLogin = useCallback(async () => {
+    const idToken = await auth.currentUser?.getIdToken(true);
+    if (!idToken) return;
+    await fetch('/api/session', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+    const next = searchParams.get('next') || '/';
+    router.replace(next);
+    router.refresh();
+  }, [router, searchParams]);
 
   // ✅ Email/Password Login
   const handleEmailSubmit = useCallback(
@@ -38,6 +54,7 @@ export default function LoginCard() {
 
       try {
         await signInWithEmailAndPassword(auth, email, password);
+        await finishLogin();
         toast({
           title: 'Welcome back 🎉',
           description: 'You have been logged in successfully.',
@@ -63,6 +80,7 @@ export default function LoginCard() {
 
     try {
       const result = await signInWithPopup(auth, provider);
+      await finishLogin();
       toast({
         title: 'Signed in successfully 🎉',
         description: `Welcome back, ${

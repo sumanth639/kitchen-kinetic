@@ -7,7 +7,6 @@ import {
   User,
   PlusCircle,
   Heart,
-  MessageSquare,
   Zap,
   Moon,
   Sun,
@@ -18,6 +17,7 @@ import { Button } from './ui/button';
 import { useAuth } from '@/components/auth-provider';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,13 +36,16 @@ import {
 
 export function Header() {
   const { user, loading } = useAuth();
+  const router = useRouter();
 
   const handleLogout = async () => {
+    await fetch('/api/sessionLogout', { method: 'POST' });
     await signOut(auth);
+    router.refresh();
   };
 
-  // Determine the redirection link based on user login status
-  const getLinkHref = (path: string) => (user ? path : '/login');
+  
+  const getLinkHref = (path: string) => (user ? path : `/login?next=${encodeURIComponent(path)}`);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">

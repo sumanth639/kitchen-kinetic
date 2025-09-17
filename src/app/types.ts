@@ -4,7 +4,7 @@ export interface RecipeListItem {
   image_url: string;
   publisher: string;
   customRecipe: boolean;
-  createdAt?: { toMillis: () => number };
+  createdAtMs?: number;
 }
 
 export interface SearchFormValues {
@@ -18,7 +18,6 @@ export interface RecipeCardProps {
 export interface RecipeSkeletonCardProps {}
 
 export interface SearchBarProps {
-  onSubmit: (values: SearchFormValues) => void;
   loading: boolean;
   hasSearched: boolean;
   searchTerm: string;
@@ -32,6 +31,6 @@ export interface RecipeListProps {
   searchTerm: string;
   currentPage: number;
   totalPages: number;
-  onPrevPage: () => void;
-  onNextPage: () => void;
+  onPrevPage?: () => void;
+  onNextPage?: () => void;
 }

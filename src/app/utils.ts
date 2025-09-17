@@ -82,13 +82,19 @@ export async function fetchRecipes(
   const firestoreRecipes: RecipeListItem[] = firestoreSnapshot.docs.map(
     (doc) => {
       const data = doc.data();
+      const createdAtMs =
+        typeof data.createdAt?.toMillis === 'function'
+          ? data.createdAt.toMillis()
+          : typeof data.createdAt?._seconds === 'number'
+          ? data.createdAt._seconds * 1000
+          : 0;
       return {
         id: doc.id,
         title: data.title,
         image_url: data.imageUrl || '/placeholder-recipe.jpg',
         publisher: data.publisher || 'Your Kitchen',
         customRecipe: true,
-        createdAt: data.createdAt,
+        createdAtMs,
       };
     }
   );
@@ -108,8 +114,8 @@ export async function fetchRecipes(
 
   if (!queryTerm) {
     finalRecipes.sort((a, b) => {
-      const timeA = a.createdAt?.toMillis() ?? 0;
-      const timeB = b.createdAt?.toMillis() ?? 0;
+      const timeA = a.createdAtMs ?? 0;
+      const timeB = b.createdAtMs ?? 0;
       return timeB - timeA;
     });
   }

@@ -28,16 +28,9 @@ import { WishlistItem } from '@/types/index';
 
 interface WishlistCardProps {
   recipe: WishlistItem;
-  onRemove: (id: string) => void;
-  isRemoving: boolean;
 }
 
-export default function WishlistCard({
-  recipe,
-  onRemove,
-  isRemoving,
-}: WishlistCardProps) {
-  const [isLoading, setIsLoading] = React.useState(true);
+export default function WishlistCard({ recipe }: WishlistCardProps) {
 
   return (
     <div>
@@ -50,17 +43,10 @@ export default function WishlistCard({
                   src={recipe.image_url}
                   alt={recipe.title}
                   fill
-                  className={cn(
-                    'object-cover rounded-t-lg transition-opacity duration-300',
-                    isLoading ? 'opacity-0' : 'opacity-100'
-                  )}
+                  className={'object-cover rounded-t-lg'}
                   sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  onLoad={() => setIsLoading(false)}
                   data-ai-hint="recipe food"
                 />
-                {isLoading && (
-                  <Skeleton className="absolute inset-0 rounded-t-lg" />
-                )}
               </div>
             ) : (
               <div className="h-40 bg-secondary flex items-center justify-center rounded-t-lg">
@@ -78,51 +64,40 @@ export default function WishlistCard({
           </div>
         </Link>
         <CardFooter className="p-2 border-t mt-auto">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-                disabled={isRemoving}
-              >
-                {isRemoving ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="mr-2 h-4 w-4" />
-                )}
-                {isRemoving ? 'Removing...' : 'Remove'}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Remove from wishlist?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will remove "{recipe.title}" from your wishlist. You can
-                  always add it back later.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => onRemove(recipe.id)}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  disabled={isRemoving}
-                >
-                  {isRemoving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Removing...
-                    </>
-                  ) : (
-                    'Remove'
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <WishlistRemoveButton id={recipe.id} title={recipe.title} />
         </CardFooter>
       </Card>
     </div>
   );
+}
+
+function WishlistRemoveButton({ id, title }: { id: string; title: string }) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10">
+          <Trash2 className="mr-2 h-4 w-4" />
+          Remove
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove from wishlist?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will remove "{title}" from your wishlist.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <form action={`/api/wishlist?id=${encodeURIComponent(id)}`} method="POST">
+              <Button type="submit" className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Confirm
+              </Button>
+            </form>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
 }

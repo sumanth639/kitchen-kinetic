@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 9002",
+    "dev": "next dev --turbopack -p 9001",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -44,6 +44,8 @@
     "dotenv": "^16.5.0",
     "embla-carousel-react": "^8.6.0",
     "firebase": "^10.12.2",
+    "firebase-admin": "^12.5.0",
+    "firebase-admin": "^13.5.0",
     "genkit": "^1.16.0",
     "lucide-react": "^0.475.0",
     "next": "15.3.3",

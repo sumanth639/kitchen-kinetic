@@ -1,6 +1,8 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
+import { useTransition } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Image from 'next/image';
@@ -26,11 +28,13 @@ const searchFormSchema = z.object({
 type SearchFormData = z.infer<typeof searchFormSchema>;
 
 export function SearchBar({
-  onSubmit,
   loading,
   hasSearched,
   searchTerm,
 }: SearchBarProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [pending, startTransition] = useTransition();
   const form = useForm<SearchFormData>({
     resolver: zodResolver(searchFormSchema),
     defaultValues: {
@@ -38,18 +42,30 @@ export function SearchBar({
     },
   });
 
-  // Manual debounce: 500ms for submit, 400ms for tags
-  const debouncedSubmit = useDebounceCallback(
-    (values: SearchFormData) => onSubmit(values),
-    500
-  );
+  // Submit handler with debounce + throttle (ignore while pending)
+  const debouncedSubmit = useDebounceCallback((values: SearchFormData) => {
+    if (pending) return; // throttle repeated submits
+    const term = values.searchTerm?.trim() || '';
+    const current = (searchParams.get('q') || '').trim();
+    if (term.length < 3 || term === current) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('q', term);
+    params.set('page', '1');
+    startTransition(() => {
+      router.push(`/?${params.toString()}`);
+    });
+  }, 500);
 
   const debouncedTagClick = useDebounceCallback((term: string) => {
+    if (pending) return;
+    const current = (searchParams.get('q') || '').trim();
+    const next = term.trim();
+    if (next === current) return;
     form.setValue('searchTerm', term);
     form.handleSubmit(debouncedSubmit)();
   }, 400);
 
-  const isButtonLoading = loading;
+  const isButtonLoading = loading || pending;
 
   return (
     <section className="relative w-full -mt-14 py-12 sm:py-16 md:py-20 lg:py-32 bg-cover bg-center bg-no-repeat overflow-hidden">
@@ -58,7 +74,7 @@ export function SearchBar({
         src="/hero-1.webp"
         alt="Hero background"
         fill
-        className="object-cover -z-10 scale-105 hover:scale-110 transition-transform duration-[20000ms] ease-out"
+        className="object-cover -z-10 scale-105 hover:scale-110 transition-transform [transition-duration:20000ms] ease-out"
         priority
         sizes="100vw"
         data-ai-hint="food cooking"
