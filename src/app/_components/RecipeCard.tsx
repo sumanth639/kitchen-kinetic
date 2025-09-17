@@ -12,7 +12,8 @@ import { RecipeCardProps } from '../types';
 export function RecipeCard({
   recipe,
   isFeatured = false,
-}: RecipeCardProps & { isFeatured?: boolean }) {
+  isPriority = false,
+}: RecipeCardProps & { isFeatured?: boolean; isPriority?: boolean }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const cardContent = (
@@ -30,7 +31,7 @@ export function RecipeCard({
           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
           onLoad={() => setIsLoading(false)}
           data-ai-hint="recipe food"
-          priority
+          priority={isPriority}
         />
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-80 group-hover:opacity-60 transition-opacity duration-500" />

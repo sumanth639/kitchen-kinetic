@@ -17,9 +17,7 @@ export default function Home() {
 
   const [loadingSearchBar, setLoadingSearchBar] = useState(false);
 
-  const page = searchParams.get('page')
-    ? parseInt(searchParams.get('page')!, 10)
-    : 1;
+  const page = searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : 1;
   const searchTerm = searchParams.get('q') || '';
   const hasSearched = !!searchTerm;
 
@@ -31,7 +29,10 @@ export default function Home() {
   } = useQuery({
     queryKey: ['recipes', searchTerm],
     queryFn: () => fetchRecipes(searchTerm),
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
+    gcTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    retry: 1,
   });
 
   const totalPages = Math.ceil(recipes.length / RECIPES_PER_PAGE);
@@ -47,6 +48,13 @@ export default function Home() {
     }
   }, []);
 
+  // Reset loading bar when search finishes
+  useEffect(() => {
+    if (!isLoading && !isRefetching) {
+      setLoadingSearchBar(false);
+    }
+  }, [isLoading, isRefetching]);
+
   useEffect(() => {
     if (searchParams.get('q')) {
       setLoadingSearchBar(isRefetching);
@@ -59,17 +67,25 @@ export default function Home() {
 
   const onSubmit = useCallback(
     (values: SearchFormValues) => {
+      
+      const currentSearch = searchParams.get('q') || '';
+      if (values.searchTerm.trim() === currentSearch.trim()) {
+       
+        return;
+      }
+  
       const params = new URLSearchParams();
       if (values.searchTerm) {
         params.set('q', values.searchTerm);
       }
       params.set('page', '1');
-
+  
       setLoadingSearchBar(true);
       router.push(`/?${params.toString()}`);
     },
-    [router]
+    [router, searchParams]
   );
+  
 
   const handlePrevPage = useCallback(() => {
     if (page > 1) {

@@ -5,7 +5,6 @@ import { User } from 'firebase/auth';
 import { Zap } from 'lucide-react';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
 
 import { ChatMessage } from '@/ai/flows/chat-types';
 import { markdownToHtml } from '../../../lib/markdown';
