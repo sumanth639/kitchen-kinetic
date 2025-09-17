@@ -12,6 +12,7 @@ import { RecipeHero } from './_components/RecipeHero';
 import { RecipeIngredients } from './_components/RecipeIngredients';
 import { RecipeActions } from './_components/RecipeActions';
 import { RecipeInfoCard } from './_components/RecipeInfoCard';
+import  RecipeSkeleton  from './_components/RecipeSkeleton';
 import { getForkifyRecipe, getFirestoreRecipe } from './utils';
 import { Recipe, Ingredient } from '@/types/index';
 
@@ -149,32 +150,7 @@ export default function RecipeDetailsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="container mx-auto px-4 pt-8 pb-6 lg:pt-12 lg:pb-8 max-w-7xl">
-        <div className="mb-8">
-          <div className="max-w-2xl mx-auto">
-            <Skeleton className="w-full h-64 sm:h-72 lg:h-80 rounded-lg mb-6" />
-          </div>
-          <div className="max-w-4xl mx-auto text-center space-y-4">
-            <Skeleton className="h-10 w-3/4 mx-auto" />
-            <Skeleton className="h-6 w-1/2 mx-auto" />
-            <div className="flex justify-center gap-6">
-              <Skeleton className="h-6 w-24" />
-              <Skeleton className="h-6 w-24" />
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Skeleton className="h-64 w-full" />
-          </div>
-          <div>
-            <Skeleton className="h-64 w-full" />
-          </div>
-        </div>
-      </div>
-    );
+    return <RecipeSkeleton />;
   }
 
   if (!recipe) {
@@ -195,6 +171,8 @@ export default function RecipeDetailsPage() {
         </div>
 
         <div className="space-y-6">
+        <RecipeInfoCard recipe={recipe} servings={servings} />
+        
           <RecipeActions
             recipe={recipe}
             isInWishlist={isInWishlist}
@@ -202,7 +180,7 @@ export default function RecipeDetailsPage() {
             onWishlistToggle={handleWishlistToggle}
           />
 
-          <RecipeInfoCard recipe={recipe} servings={servings} />
+         
         </div>
       </div>
     </div>
