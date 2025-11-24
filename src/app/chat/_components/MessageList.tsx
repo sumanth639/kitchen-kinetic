@@ -3,13 +3,9 @@
 import { User } from 'firebase/auth';
 import { Zap } from 'lucide-react';
 import rehypeRaw from "rehype-raw";
-
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ChatMessage } from '@/ai/flows/chat-types';
-import { ChatMessageActions } from './ChatMessageActions';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -23,159 +19,119 @@ export function MessageList({
   messages,
   isLoading,
   isAwaitingResponse,
-  activeChatId,
-  user,
 }: MessageListProps) {
 
   if (isLoading && messages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground px-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-16 w-16 mx-auto rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 animate-pulse" />
-          <div className="space-y-3">
-            <div className="h-4 w-48 mx-auto rounded-full bg-muted animate-pulse" />
-            <div className="h-4 w-32 mx-auto rounded-full bg-muted animate-pulse" />
-          </div>
-        </div>
+      <div className="flex h-[50vh] flex-col items-center justify-center">
+        <Zap className="h-10 w-10 animate-pulse text-muted-foreground/20" />
       </div>
     );
   }
 
   if (messages.length === 0 && !isLoading && !isAwaitingResponse) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground px-6">
-        <div className="mt-8 space-y-3">
-          <h3 className="text-xl font-semibold text-foreground">
-            {activeChatId ? 'Ready to chat!' : 'Start your culinary journey'}
-          </h3>
-          <p className="text-base max-w-md">
-            {activeChatId
-              ? 'Send a message to continue the conversation.'
-              : 'Ask me anything about recipes, cooking techniques, or meal planning.'}
-          </p>
+      <div className="flex h-[50vh] flex-col items-center justify-center text-center">
+        <div className="rounded-full bg-muted/30 p-4 mb-4">
+          <Zap className="h-8 w-8 text-primary" />
         </div>
+        <h3 className="text-lg font-semibold">How can I help you cook today?</h3>
       </div>
     );
   }
 
-  const lastMessage = messages[messages.length - 1];
-
   return (
-    <div className="space-y-4 md:space-y-8 p-3 md:p-6 pb-4 md:pb-12">
+    <div className="flex flex-col gap-6 px-4 md:px-0">
       {messages.map((message, index) => {
         if (message.role === 'model' && !message.content) return null;
+        const isUser = message.role === 'user';
 
         return (
           <div
             key={index}
-            className={`flex gap-2 md:gap-4 ${
-              message.role === 'user' ? 'justify-end' : 'justify-start'
-            } animate-in slide-in-from-bottom-4 duration-500`}
-            style={{ animationDelay: `${index * 100}ms` }}
+            className={`group flex w-full gap-4 ${isUser ? 'justify-end' : 'justify-start'}`}
           >
-            {message.role === 'model' && (
-              <Avatar className="border border-border/30 shadow-sm h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
-                <AvatarFallback className="bg-muted">
-                  <Zap className="h-3 w-3 md:h-4 md:w-4 text-primary" />
-                </AvatarFallback>
-              </Avatar>
+            {/* Avatar */}
+            {!isUser && (
+              <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-background border border-border/40 shadow-sm">
+                <Zap className="h-4 w-4 text-primary" />
+              </div>
             )}
 
-            <div
-              className={`group relative max-w-[90%] md:max-w-[80%] ${
-                message.role === 'user' ? 'order-first' : ''
-              }`}
-            >
+            <div className={`relative max-w-[85%] md:max-w-[90%] ${isUser ? 'ml-auto' : ''}`}>
               <div
                 className={`
-                  rounded-2xl md:rounded-3xl px-4 py-3 md:px-6 md:py-5
-                  shadow-sm transition-all duration-150
-                  max-w-none break-words space-y-3
-                  [&_p]:leading-relaxed
-                  [&_hr]:my-6 [&_hr]:border-border
+                  prose prose-neutral dark:prose-invert
+                  text-base leading-7
+                  max-w-[60vw] md:max-w-[60ch]
+                  break-words
+                  prose-pre:whitespace-pre-wrap
 
-                  overflow-hidden will-change-transform
-                  ${
-                    message.role === 'user'
-                      ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground ml-auto shadow-md'
-                      : 'bg-background/95 border border-border/60 shadow-sm backdrop-blur-sm'
+                  /* --- REMOVED DEFAULT HEADER STYLES --- */
+                  /* We are now handling headers via components below for better control */
+
+                  ${isUser 
+                    ? 'bg-secondary/50 px-5 py-3 rounded-3xl text-primary' 
+                    : ''
                   }
                 `}
               >
-                <div className="animate-message will-change-auto">
-                  <ReactMarkdown
-  remarkPlugins={[remarkGfm]}
-  rehypePlugins={[rehypeRaw]}   // THIS ENABLES HTML LISTS
-  components={{
-    h1: ({ node, ...props }) => (
-      <h1 className="text-2xl font-bold mb-3" {...props} />
-    ),
-    h2: ({ node, ...props }) => (
-      <h2 className="text-xl font-semibold mt-4 mb-2" {...props} />
-    ),
-    h3: ({ node, ...props }) => (
-      <h3 className="text-lg font-semibold mt-4 mb-2" {...props} />
-    ),
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw]}
+                  components={{
+                    // --- CUSTOM HEADERS (Highlights Ingredients/Instructions) ---
+                    h1: ({ node, ...props }) => (
+                      <h1 {...props} className="text-3xl font-bold text-primary mb-4 mt-2" />
+                    ),
+                    h2: ({ node, ...props }) => (
+                      <h2 {...props} className="text-2xl font-semibold text-foreground mb-3 mt-6" />
+                    ),
+                    h3: ({ node, ...props }) => (
+                      <h3 
+                        {...props} 
+                        // Highlighting Ingredients/Instructions
+                        className="text-xl md:text-2xl font-bold text-foreground/90 mt-8 mb-4 border-b border-border/60 pb-2" 
+                      />
+                    ),
 
-    ul: ({ node, ...props }) => {
-      const className = props.className || "";
-
-      if (className.includes("ingredients")) {
-        return <ul {...props} className="ingredients" />;
-      }
-
-      return <ul {...props} className="instructions space-y-3 list-none" />;
-    },
-
-    img: ({ alt }) => (
-      <img
-        src="/recipe-placeholder.jpg"
-        alt={alt || "Recipe Image"}
-        className="rounded-lg mb-4 w-full max-h-64 object-cover"
-      />
-    ),
-  }}
->
-  {message.content ?? ""}
-</ReactMarkdown>
-                </div>
+                    // --- TABLES (Ingredients) ---
+                    table: ({ node, ...props }) => (
+                      <div className="my-2 overflow-x-auto rounded-md border">
+                        <table {...props} className="w-full text-sm" />
+                      </div>
+                    ),
+                    thead: ({ node, ...props }) => (
+                      <thead {...props} className="bg-muted/50 font-medium" />
+                    ),
+                    th: ({ node, ...props }) => (
+                      <th {...props} className="px-4 py-2 text-left" />
+                    ),
+                    td: ({ node, ...props }) => (
+                      <td {...props} className="px-4 py-1 border-t align-middle" />
+                    ),
+                    a: ({ node, ...props }) => (
+                      <a {...props} className="text-blue-500 hover:underline" target="_blank" />
+                    ),
+                  }}
+                >
+                  {message.content ?? ""}
+                </ReactMarkdown>
               </div>
-
-              {message.role === 'model' && message.content && (
-                <ChatMessageActions message={message.content} />
-              )}
             </div>
-
-            {message.role === 'user' && (
-              <Avatar className="border border-border/30 shadow-sm h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
-                <AvatarFallback className="bg-muted text-foreground font-semibold text-xs md:text-sm">
-                  {user?.email?.[0]?.toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-            )}
           </div>
         );
       })}
 
-      {isAwaitingResponse && (!lastMessage || lastMessage.role !== 'model') && (
-        <div className="flex gap-2 md:gap-4 justify-start animate-in slide-in-from-bottom-4 duration-500">
-          <Avatar className="border border-border/30 shadow-sm h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
-            <AvatarFallback className="bg-muted">
-              <Zap className="h-3 w-3 md:h-4 md:w-4 text-primary" />
-            </AvatarFallback>
-          </Avatar>
-
-          <div className="rounded-2xl px-4 py-3 bg-muted/40 border border-border/40">
-            <div className="flex items-center space-x-2">
-              <div className="flex space-x-1">
-                <div className="h-1.5 w-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="h-1.5 w-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="h-1.5 w-1.5 bg-primary/60 rounded-full animate-bounce"></div>
-              </div>
-              <span className="text-xs font-medium text-muted-foreground animate-pulse">
-                Thinking...
-              </span>
-            </div>
+      {isAwaitingResponse && (
+        <div className="flex gap-4">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background border">
+             <Zap className="h-4 w-4 text-primary animate-pulse" />
+          </div>
+          <div className="flex items-center gap-1 py-2">
+            <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce delay-0"></span>
+            <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce delay-150"></span>
+            <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce delay-300"></span>
           </div>
         </div>
       )}
