@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Soup, Search, Zap } from 'lucide-react';
 import { RecipeCard } from './RecipeCard';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useRef } from 'react'; // ✅ Import useEffect and useRef
 import { RecipeListProps } from '../types';
 import { RecipeListLoading } from './RecipeSkeletonCard';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const RECIPES_PER_PAGE = 10;
 
@@ -18,9 +19,13 @@ export const RecipeList = ({
   searchTerm,
   currentPage,
   totalPages,
-  onPrevPage,
-  onNextPage,
-}: Omit<RecipeListProps, 'ref'>) => {
+}: Omit<RecipeListProps, 'ref' | 'onPrevPage' | 'onNextPage'>) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // ✅ 1. Create a reference for the top of the list
+  const listTopRef = useRef<HTMLDivElement>(null);
+
   const paginatedRecipes = recipes.slice(
     (currentPage - 1) * RECIPES_PER_PAGE,
     currentPage * RECIPES_PER_PAGE
@@ -28,9 +33,38 @@ export const RecipeList = ({
 
   const isFeaturedView = !hasSearched;
 
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', newPage.toString());
+    
+    // Keep scroll: false so we can handle the scrolling manually/smoothly
+    router.push(`/?${params.toString()}`, { scroll: false });
+  };
+
+  // ✅ 2. Auto-scroll effect
+  useEffect(() => {
+    // Run this logic only if a search is active OR if we are not on page 1
+    // This prevents annoying scrolling when you first load the homepage
+    if (hasSearched || currentPage > 1) {
+      // Small timeout ensures the DOM is ready before scrolling
+      const timer = setTimeout(() => {
+        listTopRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasSearched, currentPage, searchTerm]); // Dependencies: run when these change
+
   return (
     <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-[1440px]">
-      <div className="min-h-[400px]">
+      {/* ✅ 3. Attach the Ref here - this is where it will scroll to */}
+      <div 
+        ref={listTopRef} 
+        className="min-h-[400px] scroll-mt-24" // scroll-mt-24 adds a little buffer so it doesn't stick to the very top
+      >
         {!loading && !error && hasSearched && (
           <div className="mb-8 sm:mb-12">
             <div className="flex items-center space-x-3 mb-3">
@@ -82,7 +116,6 @@ export const RecipeList = ({
           </div>
         )}
 
-        {/* Main content */}
         {!loading && !error && (
           <>
             {recipes.length > 0 ? (
@@ -106,7 +139,7 @@ export const RecipeList = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={onPrevPage}
+                        onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
                         className="h-10 w-10 p-0 border-2 hover:border-gray-900 hover:bg-gray-800 hover:text-primary-foreground transition-all duration-300 disabled:opacity-40"
                         aria-label="Previous page"
@@ -132,7 +165,7 @@ export const RecipeList = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={onNextPage}
+                        onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
                         className="h-10 w-10 p-0 border-2 hover:border-gray-900 hover:bg-gray-800 hover:text-primary-foreground transition-all duration-300 disabled:opacity-40"
                         aria-label="Next page"
