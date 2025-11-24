@@ -1,56 +1,31 @@
-import * as genkit from '@genkit-ai/core';
-import { StreamPart, generate, GenerationOptions, Part } from '@genkit-ai/flow';
+//chatbot.ts
+import { genkit, z } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
-genkit.configure({
+const ai = genkit({
   plugins: [
-    googleAI({
-      apiNamespace: 'googleai',
-      streaming: true,
-    }),
+    googleAI(),
   ],
-  flowStateStore: 'firestore',
 });
 
-export const chatFlow = genkit.defineFlow(
+export const chatFlow = ai.defineFlow(
   {
     name: 'chatFlow',
-    inputSchema: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          text: { type: 'string' },
-        },
-        required: ['text'],
-      },
-    },
-    outputSchema: {
-      type: 'string',
-    },
+    inputSchema: z.array(
+      z.object({
+        text: z.string(),
+      })
+    ),
+    outputSchema: z.string(),
   },
   async (input) => {
     const lastMessage = input[input.length - 1];
 
-    const response = await generate({
-      model: googleAI['gemini-1.5-flash-latest'],
-      prompt: {
-        text: lastMessage.text,
-      },
-      options: {
-        streaming: true,
-      } as GenerationOptions,
+    const { text } = await ai.generate({
+      model: 'googleai/gemini-2.5-flash-lite',
+      prompt: lastMessage.text,
     });
 
-    let fullText = '';
-    for await (const chunk of response.stream()) {
-      const part = chunk as StreamPart;
-
-      if (part.text) {
-        fullText += part.text;
-      }
-    }
-
-    return fullText;
+    return text;
   }
 );

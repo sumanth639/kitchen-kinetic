@@ -1,45 +1,41 @@
 'use server';
 
 import { ai } from '@/ai/genkit';
-import { Message } from '@genkit-ai/flow';
 import { ChatInput } from './chat-types';
 
 export async function chatWithBot(
   input: ChatInput
 ): Promise<ReadableStream<Uint8Array>> {
-  const model = 'googleai/gemini-1.5-flash-latest';
+  // ✅ FIXED: Using the current Stable Flash model for Nov 2025
+  const model = 'googleai/gemini-2.5-flash-lite';
 
   const systemPrompt =
-    "You are a friendly and helpful recipe assistant named Kinetic. You can help users find recipes, suggest cooking ideas, and answer questions about cooking. Always try to be concise and helpful. Use markdown for formatting, like using '#' for titles and '**bold**' for emphasis. For lists of ingredients, present them as a comma-separated list inside a paragraph. For step-by-step instructions, use numbered lists. Ensure your responses are well-structured and easy to read.";
+    "You are a friendly and helpful recipe assistant named Kinetic. Use markdown formatting.";
 
-  const history: Message[] = input.history.map((msg) => ({
+  const history = input.history.map((msg) => ({
     role: msg.role,
     content: [{ text: msg.content }],
   }));
 
   history.push({ role: 'user', content: [{ text: input.prompt }] });
 
-  const { stream } = ai.generateStream({
+  // Ensure you handle the stream correctly
+  const { stream } = await ai.generateStream({
     model,
     system: systemPrompt,
     messages: history,
   });
 
+  // ... rest of your streaming code ...
   const textStream = new ReadableStream({
-    async start(controller) {
-      const encoder = new TextEncoder();
-      try {
+      async start(controller) {
+        const encoder = new TextEncoder();
         for await (const chunk of stream) {
-          if (chunk.text) {
-            controller.enqueue(encoder.encode(chunk.text));
-          }
+          if (chunk.text) controller.enqueue(encoder.encode(chunk.text));
         }
         controller.close();
-      } catch (e) {
-        controller.error(e);
       }
-    },
   });
-
+  
   return textStream;
 }

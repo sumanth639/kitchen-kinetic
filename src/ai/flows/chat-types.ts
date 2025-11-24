@@ -1,3 +1,4 @@
+//chat-types.ts
 import { z } from 'zod';
 
 export interface ChatMessage {
