@@ -284,3 +284,30 @@ body {
 .search-glow:focus-within {
   box-shadow: 0 0 40px rgba(249, 115, 22, 0.3);
 }
+
+/* Message chat */
+
+.animate-message {
+  animation: fadein 0.12s ease-out;
+}
+
+@keyframes fadein {
+  from { opacity: 0.4; transform: translateY(2px); }
+  to   { opacity: 1;   transform: translateY(0); }
+}
+
+
+/* INGREDIENTS → GRID LAYOUT */
+ul.ingredients {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-3 list-none p-0;
+}
+
+/* STEPS → Always 1 row each */
+ul.instructions > li {
+  @apply list-none pl-0 leading-relaxed;
+}
+
+/* Steps bullet removed (AI already includes the step number) */
+ul.instructions {
+  @apply space-y-3;
+}
