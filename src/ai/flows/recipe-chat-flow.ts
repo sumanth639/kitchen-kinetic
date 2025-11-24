@@ -52,7 +52,16 @@ CRITICAL FORMATTING RULES:
    - Each bullet MUST start with:
      **Step 1:**, **Step 2:**, etc.
 
-8. NO EXTRA TEXT. No conclusions.
+8. CONCLUSION:
+   - After the final instruction, add ONE short closing line.
+   - It MUST be directly related to the specific dish (its flavor, aroma, texture, or how it’s enjoyed).
+   - Length: 8–14 words.
+   - Include exactly ONE emoji.
+   - No generic phrases (like “enjoy your meal” or “serve hot”).
+   - Examples:
+       • "Aromatic layers make this biryani truly irresistible! 🍛"
+       • "This sukka’s roasted spices bring out bold coastal flavors! 🌶️"
+       • "Creamy texture makes this butter chicken unforgettable! 🧈"
 
 EXAMPLE OUTPUT:
 
