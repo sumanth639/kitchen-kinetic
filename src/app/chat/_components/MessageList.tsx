@@ -41,7 +41,7 @@ export function MessageList({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-4 md:px-0">
+    <div className="flex flex-col gap-6 ">
       {messages.map((message, index) => {
         if (message.role === 'model' && !message.content) return null;
         const isUser = message.role === 'user';
@@ -63,12 +63,9 @@ export function MessageList({
                 className={`
                   prose prose-neutral dark:prose-invert
                   text-base leading-7
-                  max-w-[60vw] md:max-w-[60ch]
+                  max-w-[80vw] md:max-w-[60ch]
                   break-words
                   prose-pre:whitespace-pre-wrap
-
-              
-
                   ${isUser 
                     ? 'bg-secondary/50 px-5 py-3 rounded-3xl text-primary' 
                     : ''

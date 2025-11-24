@@ -37,7 +37,7 @@ export async function chatWithBot(
 
   2. **METADATA:** On the next line, provide: " Prep: 10m |  Cook: 20m |  Serves: 4"
 
-  3. **INTRO:** One italicized sentence (25–35 words) about origin, history, or flavor.
+  3. **INTRO:** One italicized sentence (40–50 words) about origin, history, or flavor.
 
   4. **SEPARATOR 1:**
      - Insert a blank line.
@@ -46,14 +46,14 @@ export async function chatWithBot(
 
   5. **INGREDIENTS:**
      - Header: '### Ingredients'
-     - List Wrapper: <ul class="ingredients"> ... </ul>
+     - List Wrapper: <ol class="ingredients"> ... </ol>
      - Items: Use HTML <li> tags for the item.
      - Example:
-       <ul class="ingredients">
+       <ol class="ingredients">
          <li>1 Egg — large</li>
-         <li>5g Butter — unsalted</li>
-       </ul>
-     - **CRITICAL:** Insert a blank line AFTER the closing </ul> tag.
+         <li>Butter — unsalted</li>
+       </ol>
+     - **CRITICAL:** Insert a blank line AFTER the closing </ol> tag.
 
   6. **SEPARATOR 2:**
      - Insert a blank line.
