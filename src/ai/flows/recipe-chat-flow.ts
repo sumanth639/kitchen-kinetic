@@ -1,24 +1,29 @@
 'use server';
 
 import { ai } from '@/ai/genkit';
+import { adminDb } from '@/lib/firebase-admin'; // Ensure this points to your initialized Admin SDK
 import { ChatInput } from './chat-types';
 
+/**
+ * Main Chat Function - Handles streaming responses
+ */
 export async function chatWithBot(
   input: ChatInput
 ): Promise<ReadableStream<Uint8Array>> {
 
+  // Using Flash-Lite for speed and cost-efficiency
   const model = 'googleai/gemini-2.5-flash-lite';
 
   const systemPrompt = `You are Kinetic, a professional and concise culinary assistant.
 
   ### PROTOCOL - READ FIRST:
   1. **GREETINGS & GENERAL CHAT:**
-     - If the user says "hi", "hello", sends gibberish, or asks a general question (e.g. "how are you?"), respond politely and briefly. 
+     - If the user says "hi", "hello", sends gibberish, or asks a general question (e.g. "how are you?", "what can you do?"), respond politely and briefly. 
      - Introduce yourself as Kinetic and ask what they would like to cook.
-     - **DO NOT** generate a recipe.
+     - **DO NOT** generate a recipe format for these interactions.
 
   2. **RECIPE REQUESTS:**
-     - ONLY if the user explicitly asks for a dish or recipe, you **MUST** follow the formatting rules below exactly.
+     - ONLY if the user explicitly asks for a dish, recipe, or cooking advice, you **MUST** follow the formatting rules below exactly.
 
   --------------------------------------------------
 
@@ -32,7 +37,6 @@ export async function chatWithBot(
   3. INTRO (Fun Fact):
      - Provide ONE italicized sentence (25–35 words).
      - Must include at least TWO of: Origin, Culture, History, Nutrition, or Popularity.
-     
 
   4. SEPARATOR:
      Insert '---' after the intro.
@@ -68,11 +72,13 @@ export async function chatWithBot(
      - Include exactly ONE emoji.
   `;
 
+  // Map history to the format Genkit expects
   const history = input.history.map((msg) => ({
     role: msg.role,
     content: [{ text: msg.content }],
   }));
 
+  // Add the current user prompt
   history.push({ role: 'user', content: [{ text: input.prompt }] });
 
   try {
@@ -82,6 +88,7 @@ export async function chatWithBot(
       messages: history,
     });
 
+    // Create a readable stream for the client
     const textStream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
@@ -108,5 +115,52 @@ export async function chatWithBot(
         controller.close();
       }
     });
+  }
+}
+
+/**
+ * Auto-Title Generator - Renames the chat based on the first message
+ */
+export async function generateChatTitle(userId: string, chatId: string, firstMessage: string) {
+  const model = 'googleai/gemini-2.5-flash-lite';
+  
+  const systemPrompt = `
+    You are a naming assistant.
+    Generate a concise, 3-5 word title for a chat based on the user's first message.
+    - Do not use quotes.
+    - Do not use "Recipe for...". 
+    - Just the dish name or topic.
+    - If the input is a greeting (hi, hello) or gibberish, return "New Conversation".
+    
+    Example Input: "How do I make a Chicken Biriyani?"
+    Output: Chicken Biriyani Recipe
+    
+    Example Input: "What are substitutes for butter?"
+    Output: Butter Substitutes
+    
+    Example Input: "Hi"
+    Output: Greetings
+  `;
+
+  try {
+    const { text } = await ai.generate({
+      model,
+      system: systemPrompt,
+      prompt: firstMessage,
+    });
+
+    const cleanTitle = text.trim().replace(/^["']|["']$/g, '');
+
+    // Update the session in Firestore
+    // Note: Adjust the collection path if your adminDb structure is different (e.g. root 'chats' vs 'users/{id}/chats')
+    await adminDb.collection('users').doc(userId).collection('chats').doc(chatId).update({
+      title: cleanTitle
+    });
+
+    return cleanTitle;
+
+  } catch (error) {
+    console.error("Title generation failed:", error);
+    return null;
   }
 }

@@ -1,4 +1,3 @@
-// src/app/chat/_hooks/useChat.ts
 'use client';
 
 import { useState, useEffect, useCallback, FormEvent, RefObject } from 'react';
@@ -15,7 +14,8 @@ import {
   updateChatSessionTitle,
   updateLastMessageInChat,
 } from '@/lib/firestore-utils';
-import { chatWithBot } from '@/ai/flows/recipe-chat-flow';
+// Import the new generation function
+import { chatWithBot, generateChatTitle } from '@/ai/flows/recipe-chat-flow';
 import { ChatSession } from '@/types';
 
 export function useChat(scrollRef: RefObject<HTMLDivElement>) {
@@ -31,6 +31,8 @@ export function useChat(scrollRef: RefObject<HTMLDivElement>) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isAwaitingResponse, setIsAwaitingResponse] = useState(false);
 
+  // ... (Keep existing useEffects for Auth, Sessions, Messages, Scroll) ...
+  
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !user) {
@@ -91,6 +93,7 @@ export function useChat(scrollRef: RefObject<HTMLDivElement>) {
     }
   }, [messages, isAwaitingResponse, scrollRef]);
 
+
   // Set active chat handler
   const handleSetActiveChatId = useCallback((id: string | null) => {
     setActiveChatId(id);
@@ -140,6 +143,11 @@ export function useChat(scrollRef: RefObject<HTMLDivElement>) {
     setInput('');
     setMessages((prev) => [...prev, userMessage]);
     setIsAwaitingResponse(true);
+    
+    // Check if this is the start of a new chat (before creating session)
+    // If activeChatId is null, it's definitely new. 
+    // If messages is empty, it's also new (though likely activeChatId would be null or recently set).
+    const isNewConversation = !activeChatId || messages.length === 0;
 
     let chatId = activeChatId;
 
@@ -163,6 +171,21 @@ export function useChat(scrollRef: RefObject<HTMLDivElement>) {
 
       // Get streaming response from AI
       const stream = await chatWithBot(chatInput);
+      
+      // --- TRIGGER AUTO-TITLE GENERATION ---
+      // We run this in parallel/background without awaiting it to keep UI fast
+      if (isNewConversation && chatId) {
+        generateChatTitle(user.uid, chatId, currentInput).then((newTitle) => {
+            if (newTitle) {
+                // Optimistically update the session list title in the UI
+                setSessions(prev => 
+                    prev.map(s => s.id === chatId ? { ...s, title: newTitle } : s)
+                );
+            }
+        });
+      }
+      // -------------------------------------
+
       let modelContent = '';
       let modelMsgId: string | null = null;
 
