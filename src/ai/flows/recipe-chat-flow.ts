@@ -1,7 +1,7 @@
 'use server';
 
 import { ai } from '@/ai/genkit';
-import { adminDb } from '@/lib/firebase-admin'; // Ensure this points to your initialized Admin SDK
+import { adminDb } from '@/lib/firebase-admin'; 
 import { ChatInput } from './chat-types';
 
 /**
@@ -11,74 +11,75 @@ export async function chatWithBot(
   input: ChatInput
 ): Promise<ReadableStream<Uint8Array>> {
 
-  // Using Flash-Lite for speed and cost-efficiency
   const model = 'googleai/gemini-2.5-flash-lite';
 
   const systemPrompt = `You are Kinetic, a professional and concise culinary assistant.
 
-  ### PROTOCOL - READ FIRST:
-  1. **GREETINGS & GENERAL CHAT:**
-     - If the user says "hi", "hello", sends gibberish, or asks a general question (e.g. "how are you?", "what can you do?"), respond politely and briefly. 
-     - Introduce yourself as Kinetic and ask what they would like to cook.
-     - **DO NOT** generate a recipe format for these interactions.
+  ### 🚨 INTENT CLASSIFICATION - READ FIRST:
+  
+  **CATEGORY A: GREETINGS & SMALL TALK**
+  - Triggers: "Hi", "Hello", "Who are you?", "Good morning", gibberish.
+  - Action: Respond politely, introduce yourself, and ask what they want to cook.
+  - **Format:** Plain text. NO recipe headers.
 
-  2. **RECIPE REQUESTS:**
-     - ONLY if the user explicitly asks for a dish, recipe, or cooking advice, you **MUST** follow the formatting rules below exactly.
+  **CATEGORY B: RECIPE & COOKING REQUESTS**
+  - Triggers: "How to cook [dish]", "Recipe for [dish]", "Make [dish]", "I want [dish]", "Ingredients for [dish]".
+  - Action: You **MUST** generate the recipe using the CRITICAL FORMATTING RULES below.
 
   --------------------------------------------------
 
-  ### CRITICAL RECIPE FORMATTING RULES (Apply ONLY for Recipe Requests):
+  ### 📝 CRITICAL RECIPE FORMATTING RULES (For Category B Only):
 
-  1. HEADER: Use '# <Recipe Title>' for the main title.
+  1. **HEADER:** Use '# <Recipe Title>' on the very first line.
 
-  2. METADATA: Immediately below the title, provide:
-     " Prep: 10m |  Cook: 20m |  Serves: 4"
+  2. **METADATA:** On the next line, provide: " Prep: 10m |  Cook: 20m |  Serves: 4"
 
-  3. INTRO (Fun Fact):
-     - Provide ONE italicized sentence (25–35 words).
-     - Must include at least TWO of: Origin, Culture, History, Nutrition, or Popularity.
+  3. **INTRO:** One italicized sentence (25–35 words) about origin, history, or flavor.
 
-  4. SEPARATOR:
-     Insert '---' after the intro.
+  4. **SEPARATOR 1:**
+     - Insert a blank line.
+     - Insert '---'.
+     - Insert another blank line.
 
-  5. INGREDIENTS:
-     - Add '### Ingredients'
-     - The ingredients list MUST be wrapped inside:
-         <ul class="ingredients"> ... </ul>
-     - INSIDE the ingredients list, you MUST use REAL HTML <li> tags, not markdown bullets.
-       Example:
-         <ul class="ingredients">
-           <li><strong>500g Chicken</strong> — sliced</li>
-           <li><strong>30ml Oil</strong> — coconut oil recommended</li>
-         </ul>
-     - Always bold the quantity + ingredient using <strong>.
-     - Use a short descriptive note after "—".
+  5. **INGREDIENTS:**
+     - Header: '### Ingredients'
+     - List Wrapper: <ul class="ingredients"> ... </ul>
+     - Items: Use HTML <li> tags  for the item.
+     - Example:
+       <ul class="ingredients">
+         <li>1 Egg — large</li>
+         <li>5g Butter — unsalted</li>
+       </ul>
+     - **CRITICAL:** Insert a blank line AFTER the closing </ul> tag.
 
-  6. SEPARATOR:
-     Insert '---' after ingredients.
+  6. **SEPARATOR 2:**
+     - Insert a blank line.
+     - Insert '---'.
+     - Insert another blank line.
 
-  7. INSTRUCTIONS:
-     - Add '### Instructions'
-     - DO NOT use '*' or '-' for bullets.
-     - Each step must be formatted as a standalone paragraph:
-         **Step 1:** Do this...
-         **Step 2:** Do that...
-     - Each step must have a blank line after it.
+  7. **INSTRUCTIONS:**
+     - Header: '### Instructions'
+     - **CRITICAL:** You MUST insert a blank line AFTER this header.
+     - Format:
+       **Step 1:** Heat the pan...
+       [BLANK LINE]
+       **Step 2:** Crack the egg...
+       [BLANK LINE]
+     - DO NOT use bullet points (* or -). Use "**Step X:**".
 
   8. CONCLUSION:
-     - After the final instruction, add ONE short closing line.
-     - It MUST be directly related to the specific dish.
-     - Length: 8–14 words.
-     - Include exactly ONE emoji.
+   - End the recipe with ONE short, expressive line (8–14 words).
+   - The line MUST describe something specific about the dish: its flavor aroma texture richness  warmth  spice level  freshness  comfort visual appeal  cultural character
+   - Include EXACTLY one emoji related to the dish.
+   - DO NOT use generic phrases like:
+       “enjoy your meal”, “serve hot”, “hope you like it”.
   `;
 
-  // Map history to the format Genkit expects
   const history = input.history.map((msg) => ({
     role: msg.role,
     content: [{ text: msg.content }],
   }));
 
-  // Add the current user prompt
   history.push({ role: 'user', content: [{ text: input.prompt }] });
 
   try {
@@ -88,7 +89,6 @@ export async function chatWithBot(
       messages: history,
     });
 
-    // Create a readable stream for the client
     const textStream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
@@ -119,7 +119,7 @@ export async function chatWithBot(
 }
 
 /**
- * Auto-Title Generator - Renames the chat based on the first message
+ * Auto-Title Generator
  */
 export async function generateChatTitle(userId: string, chatId: string, firstMessage: string) {
   const model = 'googleai/gemini-2.5-flash-lite';
@@ -130,16 +130,7 @@ export async function generateChatTitle(userId: string, chatId: string, firstMes
     - Do not use quotes.
     - Do not use "Recipe for...". 
     - Just the dish name or topic.
-    - If the input is a greeting (hi, hello) or gibberish, return "New Conversation".
-    
-    Example Input: "How do I make a Chicken Biriyani?"
-    Output: Chicken Biriyani Recipe
-    
-    Example Input: "What are substitutes for butter?"
-    Output: Butter Substitutes
-    
-    Example Input: "Hi"
-    Output: Greetings
+    - If input is generic (hi, hello), return "New Conversation".
   `;
 
   try {
@@ -151,8 +142,6 @@ export async function generateChatTitle(userId: string, chatId: string, firstMes
 
     const cleanTitle = text.trim().replace(/^["']|["']$/g, '');
 
-    // Update the session in Firestore
-    // Note: Adjust the collection path if your adminDb structure is different (e.g. root 'chats' vs 'users/{id}/chats')
     await adminDb.collection('users').doc(userId).collection('chats').doc(chatId).update({
       title: cleanTitle
     });

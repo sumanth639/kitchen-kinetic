@@ -67,8 +67,7 @@ export function MessageList({
                   break-words
                   prose-pre:whitespace-pre-wrap
 
-                  /* --- REMOVED DEFAULT HEADER STYLES --- */
-                  /* We are now handling headers via components below for better control */
+              
 
                   ${isUser 
                     ? 'bg-secondary/50 px-5 py-3 rounded-3xl text-primary' 
