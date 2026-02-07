@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore';
 import { RecipeListItem } from '@/types';
 
-const API_KEY = process.env.NEXT_PUBLIC_FORKIFY_API_KEY;
+const API_KEY = process.env.FORKIFY_API_KEY;
 const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
 
 export async function fetchRecipes(

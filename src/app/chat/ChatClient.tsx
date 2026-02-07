@@ -12,6 +12,7 @@ import { MessageList } from './_components/MessageList'
 import { ChatInput } from './_components/ChatInput'
 import { useChat } from '@/hooks/useChat'
 import { cn } from '@/lib/utils'
+import { ChatHeader } from './_components/ChatHeader'
 
 export default function ChatClient({ id }: { id?: string }) {
   const { user, loading: authLoading } = useAuth()
@@ -72,57 +73,18 @@ export default function ChatClient({ id }: { id?: string }) {
       <main className="relative flex flex-1 flex-col overflow-hidden">
         
         {/* HEADER: Toggle Buttons & Model Name */}
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between bg-background/95 p-2 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex items-center gap-2">
-            
-            {/* Mobile Toggle */}
-            <Sheet open={isSidebarOpen} onOpenChange={setSidebarOpen}>
-              <SheetTrigger asChild className="md:hidden">
-                <Button variant="ghost" size="icon" className="text-muted-foreground">
-                  <PanelLeft className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[260px] p-0 pt-4">
-                <ChatHistory
-                  sessions={sessions}
-                  activeChatId={activeChatId}
-                  setActiveChatId={(id) => {
-                    handleSetActiveChatId(id)
-                    setSidebarOpen(false)
-                  }}
-                  onRename={handleRenameChat}
-                  onDelete={handleDeleteChat}
-                  onNewChat={() => {
-                    handleNewChat()
-                    setSidebarOpen(false)
-                  }}
-                  isSidebarOpen={isSidebarOpen}
-                />
-              </SheetContent>
-            </Sheet>
-
-            {/* Desktop Toggle */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="hidden text-muted-foreground md:flex"
-              onClick={() => setShowDesktopSidebar(!showDesktopSidebar)}
-            >
-              {
-                showDesktopSidebar ? <ChevronsLeft className="h-5 w-5" /> : <ChevronsRight className="h-5 w-5" />
-              }
-             
-            </Button>
-
-            <span className="text-sm font-medium text-muted-foreground">
-              {sessions.find(s => s.id === activeChatId)?.title || "New Chat"}
-            </span>
-          </div>
-
-          <Button variant="ghost" size="icon" onClick={handleNewChat}>
-            <PenSquare className="h-5 w-5 text-muted-foreground" />
-          </Button>
-        </header>
+        <ChatHeader
+          isSidebarOpen={isSidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          showDesktopSidebar={showDesktopSidebar}
+          setShowDesktopSidebar={setShowDesktopSidebar}
+          sessions={sessions}
+          activeChatId={activeChatId}
+          handleSetActiveChatId={handleSetActiveChatId}
+          handleRenameChat={handleRenameChat}
+          handleDeleteChat={handleDeleteChat}
+          handleNewChat={handleNewChat}
+        />
 
         {/* MESSAGES SCROLL AREA */}
         <div className="flex-1 overflow-hidden relative">
@@ -139,21 +101,20 @@ export default function ChatClient({ id }: { id?: string }) {
           </ScrollArea>
         </div>
 
-        {/* FLOATING INPUT CONTAINER */}
-        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-background via-background to-transparent pb-6 pt-10">
+        {/* INPUT AREA */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/95 to-transparent pb-4 pt-10">
           <div className="mx-auto max-w-3xl px-4">
-            <ChatInput 
-              input={input} 
-              setInput={setInput} 
-              isAwaitingResponse={isAwaitingResponse} 
-              onSubmit={handleSubmit} 
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              onSubmit={handleSubmit}
+              isAwaitingResponse={isAwaitingResponse}
             />
-             <div className="mt-2 text-center text-xs text-muted-foreground/50">
-               AI can make mistakes. Check important info.
-            </div>
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              Recipes generated can vary. Always verify ingredients and portions.
+            </p>
           </div>
         </div>
-
       </main>
     </div>
   )

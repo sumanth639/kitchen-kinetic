@@ -79,7 +79,7 @@ export function RecipeCard({
       className="w-full relative"
       style={{ paddingBottom: 'clamp(80%, 15vw + 60%, 100%)' }}
     >
-      <Card className="group absolute inset-0 overflow-hidden border border-border/40 bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-1 hover:border-primary/20 dark:bg-card/80 dark:hover:shadow-primary/10 w-full h-full">
+      <Card className="group absolute inset-0 overflow-hidden border border-border/40 bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-1 hover:border-primary/20 dark:bg-card/80 dark:hover:shadow-primary/10 w-full h-full animate-in fade-in duration-1000">
         <Link href={`/recipes/${recipe.id}`} className="block h-full">
           {cardContent}
         </Link>
