@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Soup, Search, Zap } from 'lucide-react';
 import { RecipeCard } from './RecipeCard';
 import { Suspense, useEffect, useRef } from 'react'; // ✅ Import useEffect and useRef
-import { RecipeListProps } from '../types';
+import { RecipeListProps } from '@/types';
 import { RecipeListLoading } from './RecipeSkeletonCard';
 import { useRouter, useSearchParams } from 'next/navigation';
 

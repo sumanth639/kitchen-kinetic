@@ -32,7 +32,7 @@ export default async function WishlistPage() {
         <div>
           <Suspense fallback={<WishlistLoadingSkeleton />}>
             {wishlist.length > 0 ? (
-              <WishlistGrid wishlist={wishlist} onRemove={() => {}} removingRecipeId={null} />
+              <WishlistGrid wishlist={wishlist} />
             ) : (
               <WishlistEmptyState />
             )}

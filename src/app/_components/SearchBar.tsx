@@ -16,7 +16,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Loader2, Search } from 'lucide-react';
-import { SearchBarProps } from '../types';
+import { SearchBarProps } from '@/types';
 import { useDebounceCallback } from '@/hooks/useDebounceCallback';
 
 const searchFormSchema = z.object({

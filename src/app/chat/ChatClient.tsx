@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { PanelLeft, PenSquare } from 'lucide-react'
+import { ChevronsLeft, ChevronsRight, PanelLeft, PenSquare } from 'lucide-react'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -13,7 +13,7 @@ import { ChatInput } from './_components/ChatInput'
 import { useChat } from '@/hooks/useChat'
 import { cn } from '@/lib/utils'
 
-export default function ChatClient() {
+export default function ChatClient({ id }: { id?: string }) {
   const { user, loading: authLoading } = useAuth()
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   
@@ -35,7 +35,7 @@ export default function ChatClient() {
     handleDeleteChat,
     handleNewChat,
     handleSubmit,
-  } = useChat(scrollAreaRef)
+  } = useChat(scrollAreaRef, id)
 
   if (authLoading || !user) {
     return (
@@ -108,10 +108,15 @@ export default function ChatClient() {
               className="hidden text-muted-foreground md:flex"
               onClick={() => setShowDesktopSidebar(!showDesktopSidebar)}
             >
-              <PanelLeft className="h-5 w-5" />
+              {
+                showDesktopSidebar ? <ChevronsLeft className="h-5 w-5" /> : <ChevronsRight className="h-5 w-5" />
+              }
+             
             </Button>
 
-            <span className="text-sm font-medium text-muted-foreground">Kitchen Kinetic 2.5</span>
+            <span className="text-sm font-medium text-muted-foreground">
+              {sessions.find(s => s.id === activeChatId)?.title || "New Chat"}
+            </span>
           </div>
 
           <Button variant="ghost" size="icon" onClick={handleNewChat}>

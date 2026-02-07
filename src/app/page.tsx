@@ -1,7 +1,7 @@
 import { SearchBar } from './_components/SearchBar';
 import { RecipeList } from './_components/RecipeList';
 import { fetchRecipesServer } from './server-utils';
-import { RecipeListItem } from './types';
+import { RecipeListItem } from '@/types';
 
 export const revalidate = 30;
 

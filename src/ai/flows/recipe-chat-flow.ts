@@ -1,15 +1,19 @@
 'use server';
 
-import { ai } from '@/ai/genkit';
+import { GoogleGenAI } from '@google/genai';
 import { adminDb } from '@/lib/firebase-admin'; 
 import { ChatInput } from './chat-types';
-;
+
+const gg = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
 export async function chatWithBot(
   input: ChatInput
 ): Promise<ReadableStream<Uint8Array>> {
 
-  const model = 'googleai/gemini-2.5-flash-lite';
+  console.log("Starting chatWithBot...");
+  // Use Gemini 3 Flash Preview (requested)
+  const model = 'gemini-3-flash-preview';
+  console.log("Using model:", model);
 
 
   const systemPrompt = `You are Kinetic, a professional and concise culinary assistant.
@@ -79,30 +83,41 @@ export async function chatWithBot(
   `;
 
   const history = input.history.map((msg) => ({
-    role: msg.role,
-    content: [{ text: msg.content }],
+    role: msg.role === 'user' ? 'user' : 'model',
+    parts: [{ text: msg.content }],
   }));
 
-  history.push({ role: 'user', content: [{ text: input.prompt }] });
-
   try {
-    const { stream } = await ai.generateStream({
+    console.log("Creating chat session...");
+    const chat = gg.chats.create({
       model,
-      system: systemPrompt,
-      messages: history,
+      config: {
+        systemInstruction: systemPrompt,
+      },
+      history,
+    });
+
+    console.log("Sending message stream...");
+    const stream = await chat.sendMessageStream({
+      message: input.prompt,
     });
 
     const textStream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
         try {
+          // Iterate over the stream chunks
           for await (const chunk of stream) {
-            if (chunk.text) controller.enqueue(encoder.encode(chunk.text));
+            // chunk.text contains the text part of the chunk
+            const text = chunk.text;
+            if (text) {
+              controller.enqueue(encoder.encode(text));
+            }
           }
           controller.close();
         } catch (e) {
-          console.error("Streaming error:", e);
-          controller.error(e);
+            console.error("Streaming error:", e);
+            controller.error(e);
         }
       }
     });
@@ -114,17 +129,19 @@ export async function chatWithBot(
     const encoder = new TextEncoder();
     return new ReadableStream({
       start(controller) {
+        // Provide a friendly error message to the client
         controller.enqueue(encoder.encode("I'm having trouble connecting to the kitchen. Please try again in a moment!"));
         controller.close();
       }
     });
   }
 }
+
 /**
  * Auto-Title Generator
  */
 export async function generateChatTitle(userId: string, chatId: string, firstMessage: string) {
-  const model = 'googleai/gemini-2.5-flash-lite';
+  const model = 'gemini-3-flash-preview';
   
   const systemPrompt = `
     You are a naming assistant.
@@ -136,13 +153,16 @@ export async function generateChatTitle(userId: string, chatId: string, firstMes
   `;
 
   try {
-    const { text } = await ai.generate({
+    const response = await gg.models.generateContent({
       model,
-      system: systemPrompt,
-      prompt: firstMessage,
+      config: {
+        systemInstruction: systemPrompt,
+      },
+      contents: firstMessage,
     });
 
-    const cleanTitle = text.trim().replace(/^["']|["']$/g, '');
+    const text = response.text;
+    const cleanTitle = text ? text.trim().replace(/^["']|["']$/g, '') : "New Conversation";
 
     await adminDb.collection('users').doc(userId).collection('chats').doc(chatId).update({
       title: cleanTitle

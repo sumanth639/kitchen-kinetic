@@ -1,11 +1,14 @@
-// index.ts
-export type RecipeListItem = {
+import * as React from 'react';
+
+// Common Recipe Types
+export interface RecipeListItem {
   id: string;
   title: string;
   image_url: string;
   publisher: string;
-  customRecipe?: boolean;
-};
+  customRecipe: boolean;
+  createdAtMs?: number;
+}
 
 export type Recipe = {
   id: string;
@@ -31,6 +34,10 @@ export interface WishlistItem {
   title: string;
   image_url: string;
   publisher: string;
+  addedAt?: {
+    seconds: number;
+    nanoseconds: number;
+  };
 }
 
 export interface UserRecipe {
@@ -40,6 +47,7 @@ export interface UserRecipe {
   publisher: string;
 }
 
+// Component Props
 export interface RecipeImageProps {
   src: string;
   alt: string;
@@ -71,4 +79,33 @@ export interface ChatSession {
     nanoseconds: number;
   };
   userId: string;
+}
+
+// Search and UI Types
+export interface SearchFormValues {
+  searchTerm: string;
+}
+
+export interface RecipeCardProps {
+  recipe: RecipeListItem;
+}
+
+export interface RecipeSkeletonCardProps {}
+
+export interface SearchBarProps {
+  loading: boolean;
+  hasSearched: boolean;
+  searchTerm: string;
+}
+
+export interface RecipeListProps {
+  recipes: RecipeListItem[];
+  loading: boolean;
+  error: string | null;
+  hasSearched: boolean;
+  searchTerm: string;
+  currentPage: number;
+  totalPages: number;
+  onPrevPage?: () => void;
+  onNextPage?: () => void;
 }

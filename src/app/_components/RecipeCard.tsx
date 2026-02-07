@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Clock, Users, Star, ChefHat } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { RecipeCardProps } from '../types';
+import { RecipeCardProps } from '@/types';
 
 export function RecipeCard({
   recipe,

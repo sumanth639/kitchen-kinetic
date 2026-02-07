@@ -71,9 +71,10 @@ export async function GET(req: NextRequest) {
 
     const map = new Map<string, z.infer<typeof RecipeItem>>()
     firestore.forEach((r) => map.set(r.id, r))
-    forkify.forEach((r) => { if (!map.has(r.id)) map.set(r.id, r) })
+    forkify.forEach((r: any) => { if (!map.has(r.id)) map.set(r.id, r) })
     const combined = Array.from(map.values())
 
+    // @ts-ignore
     const parsed = z.array(RecipeItem).safeParse(combined)
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid data shape' }, { status: 500 })

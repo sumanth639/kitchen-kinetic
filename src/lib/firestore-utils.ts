@@ -19,6 +19,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { ChatMessage } from '@/ai/flows/chat-types';
+import { Recipe, WishlistItem } from '@/types';
 
 // Utility function to handle Firestore errors
 export const handleFirestoreError = (error: any, operation: string) => {
@@ -56,7 +57,7 @@ export const safeFirestoreOperation = async <T>(
 export const addToWishlist = async (
   userId: string,
   recipeId: string,
-  recipeData: any
+  recipeData: Partial<Recipe>
 ) => {
   return safeFirestoreOperation(async () => {
     const wishlistRef = doc(db, 'users', userId, 'wishlist', recipeId);
@@ -76,7 +77,7 @@ export const removeFromWishlist = async (userId: string, recipeId: string) => {
 
 export const subscribeToWishlist = (
   userId: string,
-  callback: (items: any[]) => void,
+  callback: (items: WishlistItem[]) => void,
   onError?: (error: Error) => void
 ) => {
   const wishlistRef = collection(db, 'users', userId, 'wishlist');
@@ -85,7 +86,7 @@ export const subscribeToWishlist = (
   return onSnapshot(
     q,
     (snapshot) => {
-      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as WishlistItem[];
       callback(items);
     },
     (error) => {
@@ -98,7 +99,7 @@ export const subscribeToWishlist = (
 };
 
 // Recipe operations
-export const createRecipe = async (recipeData: any) => {
+export const createRecipe = async (recipeData: Omit<Recipe, 'id'>) => {
   return safeFirestoreOperation(async () => {
     const recipesRef = collection(db, 'recipes');
     return await setDoc(doc(recipesRef), recipeData);
@@ -107,7 +108,7 @@ export const createRecipe = async (recipeData: any) => {
 
 export const subscribeToUserRecipes = (
   userId: string,
-  callback: (recipes: any[]) => void,
+  callback: (recipes: Recipe[]) => void,
   onError?: (error: Error) => void
 ) => {
   const recipesRef = collection(db, 'recipes');
@@ -119,7 +120,7 @@ export const subscribeToUserRecipes = (
       const recipes = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      }));
+      })) as Recipe[];
       callback(recipes);
     },
     (error) => {

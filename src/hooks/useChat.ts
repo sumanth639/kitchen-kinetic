@@ -18,18 +18,23 @@ import {
 import { chatWithBot, generateChatTitle } from '@/ai/flows/recipe-chat-flow';
 import { ChatSession } from '@/types';
 
-export function useChat(scrollRef: RefObject<HTMLDivElement>) {
+export function useChat(scrollRef: RefObject<HTMLDivElement>, initialId: string | null = null) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
   const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [activeChatId, setActiveChatId] = useState<string | null>(initialId);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isAwaitingResponse, setIsAwaitingResponse] = useState(false);
+
+  // Sync activeChatId with initialId (URL param)
+  useEffect(() => {
+    setActiveChatId(initialId);
+  }, [initialId]);
 
   // ... (Keep existing useEffects for Auth, Sessions, Messages, Scroll) ...
   
@@ -94,14 +99,18 @@ export function useChat(scrollRef: RefObject<HTMLDivElement>) {
   }, [messages, isAwaitingResponse, scrollRef]);
 
 
-  // Set active chat handler
+  // Set active chat handler - UPDATED to use Routing
   const handleSetActiveChatId = useCallback((id: string | null) => {
-    setActiveChatId(id);
-  }, []);
+    if (id) {
+        router.push(`/chat/${id}`);
+    } else {
+        router.push('/chat');
+    }
+  }, [router]);
 
   const handleNewChat = useCallback(() => {
-    setActiveChatId(null);
-  }, []);
+    router.push('/chat');
+  }, [router]);
 
   const handleRenameChat = async (id: string, title: string) => {
     if (!user) return;
@@ -156,6 +165,7 @@ export function useChat(scrollRef: RefObject<HTMLDivElement>) {
       if (!chatId) {
         chatId = await createChatSession(user.uid, currentInput);
         setActiveChatId(chatId);
+        window.history.replaceState(null, '', `/chat/${chatId}`);
       }
 
       // Save user message
